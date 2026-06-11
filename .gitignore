@@ -1,0 +1,9 @@
+# Editor / IDE
+.idea/
+
+# Local tooling
+.memsearch/
+
+# OS junk
+.DS_Store
+Thumbs.db
