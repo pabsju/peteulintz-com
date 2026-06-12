@@ -283,3 +283,61 @@ footer {
   }
   .pane-right { flex: none; height: 70vh; }
 }
+
+/* Stats overlay (js/statsui.js): between-ball + game-over cards. Sits over
+   the canvas but never eats clicks — launching/replaying clicks pass through. */
+.stats-card {
+  position: absolute;
+  left: 50%;
+  bottom: 120px; /* between-ball card: empty zone above CLICK TO LAUNCH */
+  transform: translateX(-50%);
+  pointer-events: none;
+  background: rgba(20, 20, 19, 0.95);
+  border: 1px solid #3a372f;
+  padding: 0.9rem 1.2rem;
+  min-width: 280px;
+  max-width: 420px;
+  text-align: center;
+  font-family: 'IBM Plex Mono', monospace;
+  color: #ebe7de;
+}
+.stats-card .stats-title {
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  color: #6b665c;
+}
+.stats-card .stats-big {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #d97757;
+  margin-top: 0.3rem;
+}
+.stats-card .bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 44px;
+  margin: 0.6rem 0 0.4rem;
+}
+.stats-card .bar {
+  flex: 1;
+  background: #4a463c;
+  min-height: 2px;
+}
+.stats-card .bar.me {
+  background: #d97757;
+}
+.stats-card .stats-dim {
+  font-size: 0.62rem;
+  letter-spacing: 0.06em;
+  color: #6b665c;
+  margin-top: 0.35rem;
+}
+
+/* Game-over summary sits up top — the canvas draws GAME OVER / PLAY AGAIN
+   in the lower third, so the card stays out of its way. */
+.stats-card.at-top {
+  bottom: auto;
+  top: 24%;
+  transform: translate(-50%, -50%);
+}

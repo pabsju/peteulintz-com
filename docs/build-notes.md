@@ -169,6 +169,53 @@ Gotchas worth remembering:
   the recorder synthetic games and asserts every emitted record passes the
   *server's* validators. Client and server can't drift apart silently.
 
+---
+
+## Phase 2 (2026-06-12): stats UI
+
+### What was added
+
+- **API grew distributions.** `/api/turn` and `/api/game` now return a
+  `distribution` object — `{n, min, max, median, counts[20]}` — plus an echo
+  of the score that was just submitted. The echo matters: the client needs
+  to draw a "you are here" marker, and matching response-to-game by score is
+  also the staleness guard (below). Histograms are built from at most 5000
+  rows (`HISTOGRAM_ROW_CAP`); percentiles still use full COUNTs.
+- **`worker/lib/histogram.js`** — pure bucketing + median. Design choices:
+  empty data returns `null` (the UI tells the "no data" story, not a fake
+  zero histogram); all-identical values return ONE spike bucket rather than
+  20 empties.
+- **`public/js/statsui.js`** — pure HTML builders (node-tested) + ~30 lines
+  of DOM glue. Two cards: between-ball (bottom of the pane, in the dead zone
+  above CLICK TO LAUNCH) and game-over summary (top quarter, clear of the
+  canvas-drawn GAME OVER text). `pointer-events: none` so launch/replay
+  clicks pass through the card into the canvas.
+
+### Concept: staleness guarding without state coupling
+
+The stats responses arrive async — possibly after the player already
+relaunched, or even started a new game. Rather than threading game ids
+through the UI, the card only shows when the response's echoed score equals
+the live engine score (`latest.turn.cumulativeScore === state.score`).
+A stale response can't match, so it can't render against the wrong game.
+Cheap, no extra state, self-healing.
+
+### Concept: duplicated 6-line function > shared module (here)
+
+`bucketIndex` exists in both worker/lib/histogram.js and statsui.js because
+`worker/` files aren't served as assets and restructuring the deploy to share
+6 lines isn't worth it. The drift risk is handled by a test instead:
+statsui.test.mjs recounts a real `summarize()` histogram through the client
+copy and asserts identical buckets. If they ever diverge, CI says so.
+
+### Verification
+
+95/95 tests. E2e (`tools/integration_stats.mjs`, now screenshot-capable)
+played a real game through `wrangler dev`: both cards rendered with live
+data and correct math (final 1510 among {150, 970, 1510} → 83rd percentile,
+median 970 — hand-checked). Screenshots eyeballed for placement after one
+iteration (first cut put the turn card on top of the marquee text).
+
 **Still owed before merge to master** (deploy checklist, Phase 4):
 `npx wrangler login` → `wrangler d1 create breakout-stats` → paste real
 `database_id` into wrangler.jsonc → `wrangler d1 migrations apply

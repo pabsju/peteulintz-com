@@ -88,7 +88,9 @@ test('first turn ever: stored, ranks at the median of a sample of 1', async () =
   assert.equal(res.status, 200);
   const body = await res.json();
   assert.deepEqual(body, {
-    turnNo: 1, sampleSize: 1, cumulativePercentile: 50, turnPercentile: 50,
+    turnNo: 1, cumulativeScore: 200, turnScore: 200, sampleSize: 1,
+    cumulativePercentile: 50, turnPercentile: 50,
+    distribution: { n: 1, min: 200, max: 200, median: 200, counts: [1] },
   });
 });
 
@@ -119,6 +121,12 @@ test('percentiles rank correctly across players', async () => {
   assert.equal(top.sampleSize, 3);
   assert.equal(top.cumulativePercentile, 83.3);
   assert.equal(top.turnPercentile, 83.3);
+  // Distribution covers all three ball-1 scores.
+  assert.equal(top.distribution.n, 3);
+  assert.equal(top.distribution.min, 100);
+  assert.equal(top.distribution.max, 1000);
+  assert.equal(top.distribution.median, 200);
+  assert.equal(top.distribution.counts.reduce((a, b) => a + b, 0), 3);
 });
 
 test('turn 2 distribution only compares against other turn 2s', async () => {
@@ -151,6 +159,9 @@ test('game record: stored, summary aggregates returned', async () => {
   assert.equal(body.scorePercentile, 50); // 1 below, ties self: (1 + 0.5)/3
   assert.equal(body.bestScore, 900);
   assert.equal(body.gamesWon, 1);
+  assert.equal(body.finalScore, 600, 'own score echoed for the marker');
+  assert.equal(body.distribution.median, 600);
+  assert.equal(body.distribution.n, 3);
 });
 
 test('duplicate game POST is idempotent', async () => {

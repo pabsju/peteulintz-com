@@ -7,6 +7,11 @@
 
 import { validateTurn, validateGame } from './validate.js';
 import { percentileRank, roundPercentile } from './stats.js';
+import { summarize } from './histogram.js';
+
+// Histograms are built from at most this many rows. Percentiles always use
+// the full table (COUNT scales fine); only the shape is sampled.
+const HISTOGRAM_ROW_CAP = 5000;
 
 const MAX_BODY_BYTES = 4096;
 
@@ -63,13 +68,22 @@ export async function handleTurn(request, env) {
      FROM turns WHERE turn_no = ?3`
   ).bind(t.cumulativeScore, t.turnScore, t.turnNo).first();
 
+  // Distribution of everyone's cumulative score after ball N — the client
+  // draws this with a "you are here" marker.
+  const dist = await env.DB.prepare(
+    `SELECT cumulative_score FROM turns WHERE turn_no = ? LIMIT ${HISTOGRAM_ROW_CAP}`
+  ).bind(t.turnNo).all();
+
   return json({
     turnNo: t.turnNo,
+    cumulativeScore: t.cumulativeScore, // echoed for the client's marker
+    turnScore: t.turnScore,
     sampleSize: agg.total,
     cumulativePercentile: roundPercentile(
       percentileRank(agg.cum_below ?? 0, agg.cum_ties ?? 0, agg.total)),
     turnPercentile: roundPercentile(
       percentileRank(agg.turn_below ?? 0, agg.turn_ties ?? 0, agg.total)),
+    distribution: summarize((dist.results ?? []).map((r) => r.cumulative_score)),
   });
 }
 
@@ -99,12 +113,18 @@ export async function handleGame(request, env) {
      FROM games`
   ).bind(g.finalScore).first();
 
+  const dist = await env.DB.prepare(
+    `SELECT final_score FROM games LIMIT ${HISTOGRAM_ROW_CAP}`
+  ).all();
+
   return json({
+    finalScore: g.finalScore, // echoed for the client's marker
     sampleSize: agg.total,
     scorePercentile: roundPercentile(
       percentileRank(agg.below ?? 0, agg.ties ?? 0, agg.total)),
     bestScore: agg.best ?? null,
     gamesWon: agg.wins ?? 0,
+    distribution: summarize((dist.results ?? []).map((r) => r.final_score)),
   });
 }
 

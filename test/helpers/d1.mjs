@@ -28,6 +28,8 @@ export function makeDB() {
         return {
           run: async () => stmt.run(...bound),
           first: async () => stmt.get(...bound) ?? null,
+          // D1's .all() wraps rows in {results, meta}; mirror that.
+          all: async () => ({ results: stmt.all(...bound) }),
         };
       };
       return { ...withArgs([]), bind: (...args) => withArgs(args) };
