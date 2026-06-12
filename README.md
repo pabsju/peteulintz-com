@@ -1,112 +1,81 @@
 # peteulintz.com
 
-Personal site. One file: `index.html` (HTML + embedded CSS, no build step, no dependencies).
+Personal site. Two panes, modeled on claude.com/code-with-claude:
 
-Stack: single static file → **Cloudflare Pages** hosting → domain via **Porkbun**.
-Progress tracked in [`changelog.md`](changelog.md).
+- **Left**: bio, current AI item, reading list (warm paper, serif).
+- **Right**: ASCII breakout — giant 3D extruded ASCII text as the brick field,
+  mouse-controlled paddle. Click to launch; 3 balls per game.
 
----
+### Game rules
+
+- Each character cell is a brick worth 10 points times the combo multiplier.
+- Combo: bricks hit within 0.2s of each other climb a ten-step ladder —
+  1X, 2X, 3X … 10X — and the hit "ping" climbs ten pentatonic tones with
+  it (C5 → A6). Miss the window and it resets to 1X.
+- Every brick hit shows an expanding ring at the impact point and pops the
+  multiplier earned.
+- The paddle shrinks as the combo climbs: full width at 1X, 55% at 10X.
+- Paddle hits make a low "pock". All audio is synthesized in WebAudio,
+  no sound files. Legend (upper right) has score, balls, and a sound toggle.
+- Lose all 3 balls: game over. Clear the board: ENCORE. Click to replay.
+- Lives, combo window, and points per brick live in `js/config.js` (`game`).
+
+### Headless smoke test
+
+```bash
+node tools/cdp_smoke.mjs            # plays the game for 6s, prints state, saves /tmp/smoke.png
+```
+
+Drives the real game in headless chromium over CDP in real wall-clock time
+(`--virtual-time-budget` starves rAF, freezing the game on its first frame).
+Injects an autoplayer that tracks the ball and clicks to launch/restart.
+
+Static site, zero build step, zero dependencies. Vanilla ES modules.
+
+## Run locally
+
+```bash
+python3 -m http.server 8000
+# → http://localhost:8000
+```
+
+(Any static server works. ES modules need http://, not file://.)
+
+## Test
+
+```bash
+node --test test/
+```
+
+Game logic (`js/engine.js`, `js/glyphs.js`) is pure and DOM-free, so the
+physics, collision, and text rasterization are tested in node directly.
 
 ## Editing content
 
-Everything lives in `index.html`. Search for `EDIT:` comments — those mark the spots to change.
+| What | Where |
+|------|-------|
+| Game text (next concert) | `marqueeLines` in `js/config.js` |
+| Current AI item + link | `aiItem` in `js/config.js` |
+| Bio, books, links | `index.html` (look for `EDIT:` comments) |
+| Book covers / photos | `images/` |
 
-### Portrait
-In `<header>`. Drop a photo at `images/pete.jpg` (square crop looks best; ~400px works). Update the `src` if you name it differently. Rendered as a 7rem circle.
+Game text supports `A-Z 0-9 space . , ! ' & / -`. Add glyphs in
+`js/glyphs.js` if you need more.
 
-### Bio
-In `<section id="about">`. Edit the paragraph text directly.
+## Layout
 
-### Currently reading (cover images + comment)
-In `<section id="reading">`. One `<figure>` per book in the `.covers` grid:
-
-```html
-<figure>
-  <img src="images/mybook.jpg" alt="Book Title — Author Name">
-  <figcaption>Your comment, ~200 chars max.</figcaption>
-</figure>
 ```
-
-1. Drop the cover image in `images/` (JPG/PNG, ~300–500px tall is plenty).
-2. Set `alt` to "Title — Author".
-3. `<figcaption>` is the comment — keep it ≲200 chars. For no comment, leave it empty or delete the line.
-4. **Bump the date** in `<p class="updated">` so the list reads as current.
-
-> Note: this is static HTML, so the 200-char limit is a guideline you follow when editing — nothing enforces it.
-
-### Finished reading (dated list)
-In `<section id="finished">`. One `<li>` per book, newest on top:
-
-```html
-<li>
-  <em>Book Title</em> <span class="book-author">— Author Name</span>
-  <span class="date-finished">· May 2026</span>
-</li>
+index.html        markup, left-pane content
+css/style.css     all styling
+js/config.js      editable content (game words, AI item)
+js/glyphs.js      5x7 bitmap font + rasterizer (pure)
+js/engine.js      game physics + state (pure)
+js/game.js        canvas rendering + input (browser only)
+test/             node:test suites for the pure modules
+images/           headshot, book covers
 ```
-
-### Links
-In `<section id="links">`. Replace `USERNAME` in the GitHub URL with your handle. Add links the same way:
-
-```html
-<a href="https://example.com">Label</a>
-```
-
-### Preview locally
-```bash
-cd /home/pabsju/Projects/website
-python3 -m http.server 8000
-# open http://localhost:8000
-```
-Resize the browser narrow to check mobile. Toggle OS dark mode to check both themes.
-
----
 
 ## Deploy
 
-### 1. Register the domain (Porkbun)
-1. Buy `peteulintz.com` at https://porkbun.com.
-2. Leave WHOIS privacy on (free). DNS config comes after Cloudflare setup.
-
-### 2. Put the repo on GitHub
-```bash
-cd /home/pabsju/Projects/website
-git init
-git add .
-git commit -m "Initial site"
-gh repo create peteulintz-com --public --source=. --push   # or create via web UI
-```
-
-### 3. Cloudflare Pages
-1. https://dash.cloudflare.com → **Workers & Pages** → **Create** → **Pages** → **Connect to Git**.
-2. Pick the repo. Build settings: **Framework preset = None**, **Build command = empty**, **Output directory = `/`** (root). It just serves `index.html`.
-3. **Save and Deploy.** You get a `https://<project>.pages.dev` URL. Confirm it loads.
-
-Every `git push` to the main branch now auto-deploys.
-
-### 4. Custom domain
-1. In the Pages project → **Custom domains** → **Set up a domain** → enter `peteulintz.com`.
-2. Cloudflare gives you DNS instructions. Two options:
-
-   **A. Move nameservers to Cloudflare (simplest, recommended).**
-   - Add the site to Cloudflare (free plan), it gives you two nameservers.
-   - In Porkbun → domain → **Authoritative Nameservers** → replace with Cloudflare's two.
-   - Cloudflare then manages DNS; the Pages custom domain wires up automatically.
-
-   **B. Keep DNS at Porkbun.**
-   - In Porkbun DNS, add the `CNAME`/`A` records Cloudflare shows for `peteulintz.com`.
-   - Apex `CNAME` flattening: Porkbun supports `ALIAS`/`CNAME` on root.
-
-3. Wait for DNS propagation (minutes to a couple hours). Cloudflare issues HTTPS automatically.
-4. (Optional) Add `www.peteulintz.com` as a custom domain too; redirect to apex.
-
-### 5. Verify
-- `https://peteulintz.com` loads with a padlock.
-- Check the changelog boxes in `changelog.md`.
-
----
-
-## Updating later
-Edit `index.html` → commit → push. Live in ~30s.
-```bash
-git add index.html && git commit -m "Update reading list" && git push
-```
+Already set up on Cloudflare Workers (peteulintz-com.pulintz.workers.dev →
+peteulintz.com). Upload this directory as static assets.

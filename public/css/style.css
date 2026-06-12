@@ -1,0 +1,285 @@
+/* ---------------------------------------------------------------------------
+   peteulintz.com — split-screen: warm paper biography / dark ASCII playfield.
+   Type: Newsreader (serif body) + IBM Plex Mono (labels, game, captions).
+--------------------------------------------------------------------------- */
+
+:root {
+  --paper: #faf8f3;
+  --ink: #1f1e1a;
+  --muted: #6f6a5f;
+  --accent: #c15f3c;
+  --rule: #e6e1d5;
+  --game-bg: #141413;
+  --game-fg: #ebe7de;
+  --left-w: 30rem;
+}
+
+* { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--game-bg);
+  color: var(--ink);
+  font-family: 'Newsreader', Georgia, serif;
+  font-size: 1.0625rem;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+
+.split {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* ============ LEFT PANE ============ */
+
+.pane-left {
+  width: var(--left-w);
+  flex-shrink: 0;
+  background:
+    radial-gradient(ellipse at top left, rgba(193, 95, 60, 0.05), transparent 55%),
+    var(--paper);
+  border-right: 1px solid var(--rule);
+  padding: 3.5rem 2.5rem 3rem;
+  height: 100vh;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--rule) transparent;
+}
+
+.portrait {
+  width: 7rem;
+  height: 7rem;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+  margin: 0 0 1.5rem;
+  box-shadow: 4px 4px 0 var(--accent);
+}
+
+h1 {
+  font-size: 1.7rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin: 0 0 0.25rem;
+}
+
+.tagline {
+  color: var(--muted);
+  margin: 0 0 2.25rem;
+  font-style: italic;
+  font-size: 0.95rem;
+}
+
+section { margin: 2.5rem 0; }
+
+h2 {
+  font-size: 0.7rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--muted);
+  font-family: 'IBM Plex Mono', monospace;
+  margin: 0 0 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--rule);
+}
+
+h2::before {
+  content: '// ';
+  color: var(--accent);
+}
+
+p { margin: 0 0 1rem; }
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.15s ease;
+}
+a:hover { border-bottom-color: var(--accent); }
+
+ul { margin: 0; padding: 0; list-style: none; }
+
+#ai-item .note {
+  color: var(--muted);
+  font-style: italic;
+}
+
+/* Currently reading — cover grid with comments */
+.covers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  align-items: flex-start;
+}
+.covers figure { margin: 0; width: 7.5rem; }
+.covers img {
+  height: 10.5rem;
+  width: auto;
+  border-radius: 3px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+  transition: transform 0.15s ease;
+  display: block;
+}
+.covers img:hover { transform: translateY(-3px); }
+.covers figcaption {
+  margin-top: 0.6rem;
+  font-size: 0.82rem;
+  line-height: 1.4;
+  color: var(--muted);
+  font-style: italic;
+}
+
+/* Finished reading — dated list */
+.finished li {
+  margin-bottom: 0.85rem;
+  padding-left: 1.1rem;
+  position: relative;
+}
+.finished li::before {
+  content: '›';
+  position: absolute;
+  left: 0;
+  color: var(--accent);
+}
+.book-author { color: var(--muted); }
+.date-finished {
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-family: 'IBM Plex Mono', monospace;
+  white-space: nowrap;
+}
+
+.updated {
+  font-size: 0.8rem;
+  color: var(--muted);
+  font-family: 'IBM Plex Mono', monospace;
+  margin-top: 0.75rem;
+}
+
+.links a { margin-right: 1.25rem; }
+
+footer {
+  margin-top: 3.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--rule);
+  font-size: 0.8rem;
+  color: var(--muted);
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+/* ============ RIGHT PANE ============ */
+
+.pane-right {
+  flex: 1;
+  position: relative;
+  height: 100vh;
+  min-width: 0;
+  background: var(--game-bg);
+}
+
+#game {
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: crosshair;
+  touch-action: none;
+}
+
+.legend {
+  position: absolute;
+  top: 1.1rem;
+  right: 1.25rem;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 1.05rem;
+  color: #6b665c;
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  pointer-events: none; /* clicks fall through to the canvas… */
+  user-select: none;
+}
+.legend .legend-label {
+  font-size: 0.8em;
+  letter-spacing: 0.12em;
+}
+#legend-score {
+  color: #ebe7de;
+  font-weight: 700;
+}
+#legend-lives {
+  color: #d97757;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+#sound-toggle {
+  pointer-events: auto; /* …except the button */
+  align-self: flex-end;
+  margin-top: 0.3rem;
+  background: transparent;
+  border: 1px solid #3a372f;
+  border-radius: 2px;
+  color: #6b665c;
+  font: 700 0.72rem 'IBM Plex Mono', monospace;
+  letter-spacing: 0.1em;
+  padding: 0.35rem 0.65rem;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+#sound-toggle:hover {
+  color: #d97757;
+  border-color: #d97757;
+}
+
+.caption {
+  position: absolute;
+  top: 1.1rem;
+  left: 0;
+  right: 0;
+  margin: 0;
+  text-align: center;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #6b665c;
+  pointer-events: none;
+}
+
+.credit {
+  position: absolute;
+  bottom: 0.75rem;
+  left: 0;
+  right: 0;
+  margin: 0;
+  text-align: center;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  color: #6b665c;
+  pointer-events: none;
+}
+.credit a {
+  pointer-events: auto;
+  color: #d97757;
+}
+
+/* ============ MOBILE: stack ============ */
+
+@media (max-width: 760px) {
+  .split { flex-direction: column-reverse; min-height: auto; }
+  .pane-left {
+    width: 100%;
+    height: auto;
+    overflow: visible;
+    border-right: none;
+    border-top: 1px solid var(--rule);
+    padding: 2.5rem 1.5rem 3rem;
+  }
+  .pane-right { flex: none; height: 70vh; }
+}
