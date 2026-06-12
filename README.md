@@ -18,7 +18,45 @@ Personal site. Two panes, modeled on claude.com/code-with-claude:
 - Paddle hits make a low "pock". All audio is synthesized in WebAudio,
   no sound files. Legend (upper right) has score, balls, and a sound toggle.
 - Lose all 3 balls: game over. Clear the board: ENCORE. Click to replay.
-- Lives, combo window, and points per brick live in `js/config.js` (`game`).
+- Lives, combo window, and points per brick live in `public/js/config.js` (`game`).
+
+### Tuning the game
+
+Two places to look, depending on the knob:
+
+**Content & scoring** — `public/js/config.js` (`SITE_CONFIG.game`):
+
+| Knob | Field |
+|------|-------|
+| Balls per game | `lives` |
+| Combo reset window (seconds) | `comboWindow` |
+| Points per brick (before multiplier) | `brickPoints` |
+
+**Physics & feel** — exported constants at the top of `public/js/engine.js`:
+
+| Knob | Constant / line |
+|------|-----------------|
+| Ball speed (px/s) | `BALL_SPEED` |
+| Paddle chase rate | `PADDLE_LERP` |
+| Combo ladder steps | `MULTIPLIERS` |
+| Paddle shrink at max combo | `PADDLE_MIN_SCALE` |
+| Text thickness/size | `TEXT_SCALE` |
+| Base (1X) paddle width | `makeGame()`: `Math.max(70, width * 0.12)` |
+
+Worked example — make the 1X paddle slightly smaller: in
+`public/js/engine.js`, find in `makeGame()`
+
+```js
+const paddleW = Math.max(70, width * 0.12);
+```
+
+and lower the fraction (e.g. `0.10`) and/or the `70`px floor (the floor wins
+on narrow screens). To instead shrink the paddle only at high combos, lower
+`PADDLE_MIN_SCALE` (0.55 → 10X paddle is 55% of base; intermediate tiers
+interpolate linearly).
+
+After any change: `node --test test/*.mjs` (engine tests assert the
+combo-shrink math), then `node tools/cdp_smoke.mjs` to watch it play.
 
 ### Headless smoke test
 
@@ -35,7 +73,7 @@ Static site, zero build step, zero dependencies. Vanilla ES modules.
 ## Run locally
 
 ```bash
-python3 -m http.server 8000
+python3 -m http.server 8000 -d public
 # → http://localhost:8000
 ```
 
@@ -44,38 +82,42 @@ python3 -m http.server 8000
 ## Test
 
 ```bash
-node --test test/
+node --test test/*.mjs
 ```
 
-Game logic (`js/engine.js`, `js/glyphs.js`) is pure and DOM-free, so the
-physics, collision, and text rasterization are tested in node directly.
+Game logic (`public/js/engine.js`, `public/js/glyphs.js`) is pure and
+DOM-free, so the physics, collision, and text rasterization are tested in
+node directly.
 
 ## Editing content
 
 | What | Where |
 |------|-------|
-| Game text (next concert) | `marqueeLines` in `js/config.js` |
-| Current AI item + link | `aiItem` in `js/config.js` |
-| Bio, books, links | `index.html` (look for `EDIT:` comments) |
-| Book covers / photos | `images/` |
+| Game text (next concert) | `marqueeLines` in `public/js/config.js` |
+| Current AI item + link | `aiItem` in `public/js/config.js` |
+| Bio, books, links | `public/index.html` (look for `EDIT:` comments) |
+| Book covers / photos | `public/images/` |
 
 Game text supports `A-Z 0-9 space . , ! ' & / -`. Add glyphs in
-`js/glyphs.js` if you need more.
+`public/js/glyphs.js` if you need more.
 
 ## Layout
 
 ```
-index.html        markup, left-pane content
-css/style.css     all styling
-js/config.js      editable content (game words, AI item)
-js/glyphs.js      5x7 bitmap font + rasterizer (pure)
-js/engine.js      game physics + state (pure)
-js/game.js        canvas rendering + input (browser only)
-test/             node:test suites for the pure modules
-images/           headshot, book covers
+public/           everything deployed (Cloudflare serves only this dir)
+  index.html      markup, left-pane content
+  css/style.css   all styling
+  js/config.js    editable content (game words, AI item, game tuning)
+  js/glyphs.js    5x7 bitmap font + rasterizer (pure)
+  js/engine.js    game physics + state (pure) — paddle/ball/combo constants
+  js/game.js      canvas rendering + input (browser only)
+  images/         headshot, book covers
+test/             node:test suites for the pure modules (private)
+tools/            headless smoke test (private)
 ```
 
 ## Deploy
 
 Already set up on Cloudflare Workers (peteulintz-com.pulintz.workers.dev →
-peteulintz.com). Upload this directory as static assets.
+peteulintz.com). Pushes to `master` auto-deploy; `wrangler.jsonc` serves
+`./public` as static assets, so README/changelog/tests stay private.
