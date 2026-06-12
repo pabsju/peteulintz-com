@@ -91,6 +91,7 @@ export function buildSnapshot(phase, state, recorder, latestStats, recentLines =
     : null;
   return {
     phase,
+    mode: recorder.mode,
     score: state.score,
     lives: state.lives,
     turnNo: recorder.turnNo,

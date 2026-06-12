@@ -7,14 +7,17 @@
 // D1 binds positionally; node:sqlite wants {1: v1, 2: v2} for ?N params.
 
 import { DatabaseSync } from 'node:sqlite';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
-const MIGRATION = fileURLToPath(new URL('../../migrations/0001_init.sql', import.meta.url));
+const MIGRATIONS_DIR = fileURLToPath(new URL('../../migrations', import.meta.url));
 
 export function makeDB() {
   const db = new DatabaseSync(':memory:');
-  db.exec(readFileSync(MIGRATION, 'utf8'));
+  // Apply every migration in order — tests always see the prod schema.
+  for (const f of readdirSync(MIGRATIONS_DIR).filter((f) => f.endsWith('.sql')).sort()) {
+    db.exec(readFileSync(`${MIGRATIONS_DIR}/${f}`, 'utf8'));
+  }
   return {
     prepare(sql) {
       const stmt = db.prepare(sql);

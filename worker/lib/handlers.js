@@ -52,30 +52,32 @@ export async function handleTurn(request, env) {
   const t = v.value;
 
   await env.DB.prepare(
-    `INSERT INTO turns (game_id, turn_no, turn_score, cumulative_score, bricks, max_combo, duration_s)
-     VALUES (?, ?, ?, ?, ?, ?, ?)
+    `INSERT INTO turns (game_id, mode, turn_no, turn_score, cumulative_score, bricks, max_combo, duration_s)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
      ON CONFLICT (game_id, turn_no) DO NOTHING`
-  ).bind(t.gameId, t.turnNo, t.turnScore, t.cumulativeScore, t.bricks, t.maxCombo, t.durationS).run();
+  ).bind(t.gameId, t.mode, t.turnNo, t.turnScore, t.cumulativeScore, t.bricks, t.maxCombo, t.durationS).run();
 
-  // One pass over everyone's ball-N rows: counts below/at this player's
-  // cumulative score and this ball's score. SQLite booleans sum as 0/1.
+  // One pass over everyone's ball-N rows IN THIS MODE: counts below/at this
+  // player's cumulative score and this ball's score. Laptop and desktop
+  // scores aren't comparable, so they never share a distribution.
   const agg = await env.DB.prepare(
     `SELECT COUNT(*) AS total,
             SUM(cumulative_score < ?1) AS cum_below,
             SUM(cumulative_score = ?1) AS cum_ties,
             SUM(turn_score < ?2) AS turn_below,
             SUM(turn_score = ?2) AS turn_ties
-     FROM turns WHERE turn_no = ?3`
-  ).bind(t.cumulativeScore, t.turnScore, t.turnNo).first();
+     FROM turns WHERE turn_no = ?3 AND mode = ?4`
+  ).bind(t.cumulativeScore, t.turnScore, t.turnNo, t.mode).first();
 
   // Distribution of everyone's cumulative score after ball N — the client
   // draws this with a "you are here" marker.
   const dist = await env.DB.prepare(
-    `SELECT cumulative_score FROM turns WHERE turn_no = ? LIMIT ${HISTOGRAM_ROW_CAP}`
-  ).bind(t.turnNo).all();
+    `SELECT cumulative_score FROM turns WHERE turn_no = ? AND mode = ? LIMIT ${HISTOGRAM_ROW_CAP}`
+  ).bind(t.turnNo, t.mode).all();
 
   return json({
     turnNo: t.turnNo,
+    mode: t.mode,
     cumulativeScore: t.cumulativeScore, // echoed for the client's marker
     turnScore: t.turnScore,
     sampleSize: agg.total,
@@ -99,10 +101,10 @@ export async function handleGame(request, env) {
   const g = v.value;
 
   await env.DB.prepare(
-    `INSERT INTO games (id, final_score, turns, outcome, max_combo, duration_s)
-     VALUES (?, ?, ?, ?, ?, ?)
+    `INSERT INTO games (id, mode, final_score, turns, outcome, max_combo, duration_s)
+     VALUES (?, ?, ?, ?, ?, ?, ?)
      ON CONFLICT (id) DO NOTHING`
-  ).bind(g.gameId, g.finalScore, g.turns, g.outcome, g.maxCombo, g.durationS).run();
+  ).bind(g.gameId, g.mode, g.finalScore, g.turns, g.outcome, g.maxCombo, g.durationS).run();
 
   const agg = await env.DB.prepare(
     `SELECT COUNT(*) AS total,
@@ -110,15 +112,16 @@ export async function handleGame(request, env) {
             SUM(final_score = ?1) AS ties,
             MAX(final_score) AS best,
             SUM(outcome = 'won') AS wins
-     FROM games`
-  ).bind(g.finalScore).first();
+     FROM games WHERE mode = ?2`
+  ).bind(g.finalScore, g.mode).first();
 
   const dist = await env.DB.prepare(
-    `SELECT final_score FROM games LIMIT ${HISTOGRAM_ROW_CAP}`
-  ).all();
+    `SELECT final_score FROM games WHERE mode = ? LIMIT ${HISTOGRAM_ROW_CAP}`
+  ).bind(g.mode).all();
 
   return json({
     finalScore: g.finalScore, // echoed for the client's marker
+    mode: g.mode,
     sampleSize: agg.total,
     scorePercentile: roundPercentile(
       percentileRank(agg.below ?? 0, agg.ties ?? 0, agg.total)),

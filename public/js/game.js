@@ -8,9 +8,13 @@ import { createRecorder, tick as statsTick, send as statsSend, latest as latestS
 import { initStatsUI, updateStatsUI } from './statsui.js';
 import { initSnark, snarkTick } from './snark.js';
 
+// Difficulty: 'laptop' (slower ball, trackpad-friendly) or 'desktop'.
+// Persisted; stats aggregate within a mode only.
+let gameMode = localStorage.getItem('gameMode') === 'laptop' ? 'laptop' : 'desktop';
+
 // Stats recorder: watches the same engine events the renderer does and
 // POSTs turn/game records to /api/* (fire-and-forget; see js/stats.js).
-const recorder = createRecorder();
+const recorder = createRecorder({ mode: gameMode });
 
 const COLORS = {
   bg: '#141413',
@@ -116,6 +120,25 @@ soundToggle.addEventListener('click', () => {
 });
 renderSoundToggle();
 
+// Difficulty toggle. Switching rebuilds the game at the new ball speed —
+// the recorder sees the rebuild and abandons the in-flight game (a laptop
+// half-game must not finish as a desktop record).
+const modeToggle = document.getElementById('mode-toggle');
+
+function renderModeToggle() {
+  modeToggle.textContent = gameMode.toUpperCase();
+  modeToggle.setAttribute('aria-pressed', String(gameMode === 'laptop'));
+}
+
+modeToggle.addEventListener('click', () => {
+  gameMode = gameMode === 'laptop' ? 'desktop' : 'laptop';
+  localStorage.setItem('gameMode', gameMode);
+  recorder.mode = gameMode;
+  renderModeToggle();
+  if (state) resize(); // fresh board at the new speed
+});
+renderModeToggle();
+
 function updateLegend() {
   const score = String(state.score).padStart(6, '0');
   if (legendScore.textContent !== score) legendScore.textContent = score;
@@ -147,6 +170,7 @@ function resize() {
     width: rect.width,
     height: rect.height,
     ...SITE_CONFIG.game,
+    ballSpeed: SITE_CONFIG.game.ballSpeeds[gameMode],
   });
   effects = [];
   textLayer = document.createElement('canvas');

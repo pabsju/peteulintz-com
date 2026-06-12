@@ -26,9 +26,10 @@ export function uuidv4() {
   return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
 }
 
-export function createRecorder({ newId } = {}) {
+export function createRecorder({ newId, mode = 'desktop' } = {}) {
   return {
     newId: newId || uuidv4,
+    mode, // difficulty: 'laptop' | 'desktop' — game.js updates on toggle
     gameId: null,
     prevMode: 'ready',
     lastScore: 0,
@@ -56,6 +57,7 @@ function finishTurn(rec, state) {
   return {
     kind: 'turn',
     gameId: rec.gameId,
+    mode: rec.mode,
     turnNo: rec.turnNo,
     turnScore: state.score - rec.turnStartScore,
     cumulativeScore: state.score,
@@ -69,6 +71,7 @@ function finishGame(rec, state, outcome) {
   return {
     kind: 'game',
     gameId: rec.gameId,
+    mode: rec.mode,
     finalScore: state.score,
     turns: rec.turnNo,
     outcome,

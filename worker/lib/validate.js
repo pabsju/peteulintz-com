@@ -10,6 +10,8 @@
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+export const MODES = new Set(['laptop', 'desktop']);
+
 export const LIMITS = {
   maxTurns: 10, // lives is 3 today; headroom in case config changes
   maxBricksPerTurn: 4000, // board is ~1400 cells today
@@ -36,6 +38,7 @@ function isNum(v, lo, hi) {
 export function validateTurn(p) {
   if (typeof p !== 'object' || p === null || Array.isArray(p)) return fail('payload must be an object');
   if (typeof p.gameId !== 'string' || !UUID_RE.test(p.gameId)) return fail('gameId must be a UUID');
+  if (!MODES.has(p.mode)) return fail('mode must be laptop|desktop');
   if (!isInt(p.turnNo, 1, LIMITS.maxTurns)) return fail(`turnNo must be an integer 1-${LIMITS.maxTurns}`);
   if (!isInt(p.bricks, 0, LIMITS.maxBricksPerTurn)) return fail('bricks out of range');
   const maxScore = p.bricks * LIMITS.brickPoints * LIMITS.maxMultiplier;
@@ -54,6 +57,7 @@ export function validateTurn(p) {
     ok: true,
     value: {
       gameId: p.gameId.toLowerCase(),
+      mode: p.mode,
       turnNo: p.turnNo,
       turnScore: p.turnScore,
       cumulativeScore: p.cumulativeScore,
@@ -68,6 +72,7 @@ export function validateTurn(p) {
 export function validateGame(p) {
   if (typeof p !== 'object' || p === null || Array.isArray(p)) return fail('payload must be an object');
   if (typeof p.gameId !== 'string' || !UUID_RE.test(p.gameId)) return fail('gameId must be a UUID');
+  if (!MODES.has(p.mode)) return fail('mode must be laptop|desktop');
   if (!isInt(p.finalScore, 0, LIMITS.maxTurns * LIMITS.maxBricksPerTurn * 100)) {
     return fail('finalScore out of range');
   }
@@ -79,6 +84,7 @@ export function validateGame(p) {
     ok: true,
     value: {
       gameId: p.gameId.toLowerCase(),
+      mode: p.mode,
       finalScore: p.finalScore,
       turns: p.turns,
       outcome: p.outcome,

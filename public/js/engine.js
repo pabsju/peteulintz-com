@@ -6,7 +6,7 @@
 
 import { rasterizeLines } from './glyphs.js';
 
-export const BALL_SPEED = 720;
+export const BALL_SPEED = 720; // default; createGame({ballSpeed}) overrides per difficulty
 export const PADDLE_LERP = 14; // paddle chase rate (1/s)
 
 // Combo ladder: score multiplier (and ping tone index) per consecutive
@@ -52,6 +52,7 @@ export function createGame({
   lives = 3,
   comboWindow = 0.2,
   brickPoints = 10,
+  ballSpeed = BALL_SPEED,
 }) {
   const { cells, cellSize } = layoutCells(lines, width, height);
   const paddleW = Math.max(70, width * 0.12);
@@ -68,6 +69,7 @@ export function createGame({
     comboTimer: 0,
     comboWindow,
     brickPoints,
+    ballSpeed,
     ball: { x: width / 2, y: 0, vx: 0, vy: 0, r: Math.max(5, cellSize * 0.9) },
     paddle: { x: width / 2, y: height - 36, w: paddleW, baseW: paddleW, h: 8 },
     textDirty: true, // renderer redraws the text layer when set
@@ -93,8 +95,8 @@ function paddleWidthFor(state) {
 export function launch(state) {
   if (state.mode !== 'ready') return;
   const angle = (-Math.PI / 2) + (state.rng() - 0.5) * (Math.PI / 3);
-  state.ball.vx = Math.cos(angle) * BALL_SPEED;
-  state.ball.vy = Math.sin(angle) * BALL_SPEED;
+  state.ball.vx = Math.cos(angle) * state.ballSpeed;
+  state.ball.vy = Math.sin(angle) * state.ballSpeed;
   state.mode = 'playing';
 }
 
@@ -175,8 +177,8 @@ export function step(state, dt, paddleTargetX) {
   if (ball.vy > 0 && ballHitsRect(ball, px, paddle.y, paddle.w, paddle.h)) {
     const offset = (ball.x - paddle.x) / (paddle.w / 2); // -1..1
     const angle = (-Math.PI / 2) + offset * (Math.PI / 3);
-    ball.vx = Math.cos(angle) * BALL_SPEED;
-    ball.vy = Math.sin(angle) * BALL_SPEED;
+    ball.vx = Math.cos(angle) * state.ballSpeed;
+    ball.vy = Math.sin(angle) * state.ballSpeed;
     ball.y = paddle.y - ball.r;
     events.push({ type: 'paddle' });
   }

@@ -19,14 +19,14 @@ const uuid = (n) => `00000000-0000-4000-8000-${String(n).padStart(12, '0')}`;
 
 function turnPayload(overrides = {}) {
   return {
-    gameId: uuid(1), turnNo: 1, turnScore: 200, cumulativeScore: 200,
+    gameId: uuid(1), mode: 'desktop', turnNo: 1, turnScore: 200, cumulativeScore: 200,
     bricks: 15, maxCombo: 3, durationS: 12.5, ...overrides,
   };
 }
 
 function gamePayload(overrides = {}) {
   return {
-    gameId: uuid(1), finalScore: 600, turns: 3, outcome: 'over',
+    gameId: uuid(1), mode: 'desktop', finalScore: 600, turns: 3, outcome: 'over',
     maxCombo: 5, durationS: 60, ...overrides,
   };
 }
@@ -88,10 +88,31 @@ test('first turn ever: stored, ranks at the median of a sample of 1', async () =
   assert.equal(res.status, 200);
   const body = await res.json();
   assert.deepEqual(body, {
-    turnNo: 1, cumulativeScore: 200, turnScore: 200, sampleSize: 1,
+    turnNo: 1, mode: 'desktop', cumulativeScore: 200, turnScore: 200, sampleSize: 1,
     cumulativePercentile: 50, turnPercentile: 50,
     distribution: { n: 1, min: 200, max: 200, median: 200, counts: [1] },
   });
+});
+
+test('modes never share a distribution', async () => {
+  const env = { DB: makeDB() };
+  // A monster desktop ball 1…
+  await route(post('/api/turn', turnPayload({
+    gameId: uuid(1), mode: 'desktop', bricks: 100, turnScore: 5000, cumulativeScore: 5000,
+  })), env);
+  // …is invisible to a laptop ball 1.
+  const res = await route(post('/api/turn', turnPayload({
+    gameId: uuid(2), mode: 'laptop', bricks: 10, turnScore: 100, cumulativeScore: 100,
+  })), env);
+  const body = await res.json();
+  assert.equal(body.sampleSize, 1, 'laptop sample is laptop-only');
+  assert.equal(body.cumulativePercentile, 50, 'sole laptop play sits at the median');
+  // Same isolation for completed games.
+  await route(post('/api/game', gamePayload({ gameId: uuid(1), mode: 'desktop', finalScore: 9000 })), env);
+  const g = await route(post('/api/game', gamePayload({ gameId: uuid(2), mode: 'laptop', finalScore: 300 })), env);
+  const gb = await g.json();
+  assert.equal(gb.sampleSize, 1);
+  assert.equal(gb.bestScore, 300, 'desktop 9000 not leaking into laptop bestScore');
 });
 
 test('duplicate turn POST is idempotent (retries cannot double-count)', async () => {

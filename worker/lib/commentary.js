@@ -14,6 +14,7 @@ const ANTHROPIC_URL = 'https://api.anthropic.com/v1/messages';
 const MAX_LINE_CHARS = 160;
 
 const PHASES = new Set(['mid', 'life', 'over', 'won']);
+const MODES = new Set(['laptop', 'desktop']);
 
 const fail = (error) => ({ ok: false, error });
 
@@ -29,6 +30,7 @@ function pctOrNull(v) {
 export function validateSnapshot(p) {
   if (typeof p !== 'object' || p === null || Array.isArray(p)) return fail('payload must be an object');
   if (!PHASES.has(p.phase)) return fail('bad phase');
+  if (!MODES.has(p.mode)) return fail('bad mode');
   if (!intIn(p.score, 0, 4_000_000)) return fail('score out of range');
   if (!intIn(p.lives, 0, 10)) return fail('lives out of range');
   if (!intIn(p.turnNo, 0, 10)) return fail('turnNo out of range');
@@ -45,6 +47,7 @@ export function validateSnapshot(p) {
     ok: true,
     value: {
       phase: p.phase,
+      mode: p.mode,
       score: p.score,
       lives: p.lives,
       turnNo: p.turnNo,

@@ -14,6 +14,9 @@ export const SITE_CONFIG = {
   // Game tuning.
   game: {
     lives: 3,
+    // Difficulty modes (legend toggle). Laptop = trackpad-friendly slower
+    // ball; desktop = full speed. Stats aggregate within a mode only.
+    ballSpeeds: { laptop: 540, desktop: 720 },
     // Seconds allowed between brick hits before the combo multiplier
     // resets to 1X. Hits inside the window climb 1X→2X→3X→…→10X.
     // Needs to exceed the ball's brick→paddle travel time (~1s at

@@ -41,13 +41,13 @@ test('barSpecs: nothing to draw for null or single-spike distributions', () => {
 
 test('turn card: normal case shows percentile, bars, and sample size', () => {
   const html = buildTurnCard({
-    turnNo: 2, cumulativeScore: 230, turnScore: 80, sampleSize: 15,
+    turnNo: 2, mode: 'laptop', cumulativeScore: 230, turnScore: 80, sampleSize: 15,
     cumulativePercentile: 62.4, turnPercentile: 38.2,
     distribution: { n: 15, min: 0, max: 900, median: 300, counts: [5, 4, 3, 2, 1] },
   });
   assert.match(html, /BALL 2 BANKED — 230 PTS/);
   assert.match(html, /62ND PERCENTILE/);
-  assert.match(html, /15 PLAYS/);
+  assert.match(html, /15 LAPTOP PLAYS/);
   assert.match(html, /38TH PCTL/);
   assert.match(html, /class="bars"/);
   assert.match(html, /bar me/, 'player marker present');
@@ -66,11 +66,11 @@ test('turn card: sample of one gets the set-the-bar line, no bars, no NaN', () =
 
 test('game card: full summary with median/best/wins', () => {
   const html = buildGameCard({
-    finalScore: 970, sampleSize: 4, scorePercentile: 87.5,
+    finalScore: 970, mode: 'desktop', sampleSize: 4, scorePercentile: 87.5,
     bestScore: 1240, gamesWon: 1,
     distribution: { n: 4, min: 150, max: 1240, median: 560, counts: [2, 1, 0, 1] },
   });
-  assert.match(html, /88TH PERCENTILE OF 4 GAMES/);
+  assert.match(html, /88TH PERCENTILE OF 4 DESKTOP GAMES/);
   assert.match(html, /MEDIAN 560/);
   assert.match(html, /BEST 1240/);
   assert.match(html, /CLEARED 1X EVER/);

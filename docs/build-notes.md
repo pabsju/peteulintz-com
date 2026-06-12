@@ -333,6 +333,27 @@ wit-first, Peart as sensibility, references capped at 1-in-5 and legible
 without knowing the band. The client's canned lines import from the same
 file, so there's exactly one place to edit him.
 
+### Difficulty modes (laptop/desktop)
+
+Trackpad play at 720 px/s was hopeless (user, demoing on a laptop:
+"impossible"). Legend toggle: laptop = 540 px/s ball, desktop = 720.
+Speeds live in config (`ballSpeeds`); `BALL_SPEED` in engine.js is now just
+the default for `createGame({ballSpeed})`.
+
+The interesting part is the stats plumbing: scores aren't comparable across
+modes, so `mode` rides every record (recorder → API → D1) and **every
+aggregate query filters by it** — separate percentiles, histograms,
+medians, best scores. Migration 0002 adds the column with DEFAULT
+'desktop' (all pre-existing rows were desktop-speed) and re-cuts the
+indexes mode-first. Toggling mid-game rebuilds the board, and the
+recorder's existing abandon logic keeps a half-played laptop game from
+finishing as a desktop record. The test D1 helper now applies ALL
+migrations in order, so tests always see the prod schema. Snark snapshot
+gained the mode too — the Professor knows you're on the slow ball.
+
+Seeding note: `seed_games.mjs` takes a mode argument now; prod needs both
+runs (`… 30 desktop` and `… 20 laptop`).
+
 ### Deploy checklist (the only part needing human auth)
 
 1. `npx wrangler login` (interactive — user runs it)

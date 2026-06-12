@@ -29,8 +29,13 @@ Two places to look, depending on the knob:
 | Knob | Field |
 |------|-------|
 | Balls per game | `lives` |
+| Ball speed per difficulty (px/s) | `ballSpeeds.laptop` / `ballSpeeds.desktop` |
 | Combo reset window (seconds) | `comboWindow` |
 | Points per brick (before multiplier) | `brickPoints` |
+
+Difficulty is the LAPTOP/DESKTOP toggle in the legend (persisted in
+localStorage). Laptop = slower ball for trackpads. Stats are tracked and
+aggregated per mode — the two never share a distribution.
 
 **Physics & feel** — exported constants at the top of `public/js/engine.js`:
 

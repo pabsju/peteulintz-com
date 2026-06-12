@@ -246,3 +246,13 @@ test('lives count is configurable', () => {
   assert.equal(g.lives, 5);
   assert.equal(g.maxLives, 5);
 });
+
+test('ballSpeed param: launch speed follows difficulty, defaults to BALL_SPEED', () => {
+  const mk = (ballSpeed) => {
+    const g = createGame({ lines: ['AB'], width: 800, height: 600, rng: () => 0.5, ...(ballSpeed && { ballSpeed }) });
+    launch(g);
+    return Math.hypot(g.ball.vx, g.ball.vy);
+  };
+  assert.ok(Math.abs(mk(540) - 540) < 0.001, 'laptop speed');
+  assert.ok(Math.abs(mk(null) - BALL_SPEED) < 0.001, 'default = BALL_SPEED');
+});

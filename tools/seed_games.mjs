@@ -3,7 +3,10 @@
 // wrangler dev to test, against production once after deploy so the first
 // human player isn't compared to an empty table.
 //
-//   node tools/seed_games.mjs [url] [nGames]
+//   node tools/seed_games.mjs [url] [nGames] [mode]
+//
+// mode: 'desktop' (default) or 'laptop' — seed BOTH in prod, the
+// distributions are separate.
 //
 // Skill is paddle-tracking quality: 1.0 follows the ball exactly, lower
 // values wander off target sinusoidally and miss more. Cycles a fixed
@@ -16,6 +19,7 @@ const BIN = process.env.CHROME_BIN
   || process.env.HOME + '/.cache/ms-playwright/chromium-1217/chrome-linux64/chrome';
 const URL_TO_TEST = process.argv[2] || 'http://localhost:8787/';
 const N_GAMES = Number(process.argv[3] || 30);
+const MODE = process.argv[4] === 'laptop' ? 'laptop' : 'desktop';
 const SKILLS = [0.15, 0.3, 0.45, 0.55, 0.65, 0.75, 0.85];
 const PER_GAME_TIMEOUT_MS = 180_000;
 
@@ -46,6 +50,10 @@ try {
     const r = await send('Runtime.evaluate', { expression, returnByValue: true });
     return r.result?.result?.value;
   };
+
+  // Difficulty: persist the mode, then reload so the game boots into it.
+  await evalJs(`localStorage.setItem('gameMode', '${MODE}'); location.reload(); 'ok'`);
+  await sleep(2500);
 
   // Driver: follows the ball with skill-scaled wander; clicks to launch.
   // window.__seed.skill is set per game from out here.

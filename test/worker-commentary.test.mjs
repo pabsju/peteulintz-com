@@ -6,7 +6,7 @@ import {
 
 function snap(overrides = {}) {
   return {
-    phase: 'mid', score: 230, lives: 2, turnNo: 1, bricksLeft: 1100,
+    phase: 'mid', mode: 'desktop', score: 230, lives: 2, turnNo: 1, bricksLeft: 1100,
     bricksTotal: 1400, maxCombo: 4, secondsElapsed: 41.7, percentile: 38.2, sampleSize: 19,
     recentLines: ['Nice paddle. Shame about the aim.'],
     ...overrides,

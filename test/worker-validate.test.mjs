@@ -8,6 +8,7 @@ const UUID = 'a3f1c2d4-5b6e-4f70-8a91-b2c3d4e5f601';
 function goodTurn(overrides = {}) {
   return {
     gameId: UUID,
+    mode: 'desktop',
     turnNo: 1,
     turnScore: 340,
     cumulativeScore: 340,
@@ -21,6 +22,7 @@ function goodTurn(overrides = {}) {
 function goodGame(overrides = {}) {
   return {
     gameId: UUID,
+    mode: 'laptop',
     finalScore: 1280,
     turns: 3,
     outcome: 'over',
@@ -44,8 +46,17 @@ test('turn: accepts a plausible payload and normalizes it', () => {
   assert.equal(r.value.gameId, UUID, 'uuid lowercased');
   // Normalized object carries exactly the expected keys — nothing smuggled.
   assert.deepEqual(Object.keys(r.value).sort(), [
-    'bricks', 'cumulativeScore', 'durationS', 'gameId', 'maxCombo', 'turnNo', 'turnScore',
+    'bricks', 'cumulativeScore', 'durationS', 'gameId', 'maxCombo', 'mode', 'turnNo', 'turnScore',
   ]);
+});
+
+test('turn/game: mode is a closed enum', () => {
+  for (const bad of [undefined, '', 'tablet', 'DESKTOP', 7]) {
+    assert.equal(validateTurn(goodTurn({ mode: bad })).ok, false, `turn ${bad}`);
+    assert.equal(validateGame(goodGame({ mode: bad })).ok, false, `game ${bad}`);
+  }
+  assert.equal(validateTurn(goodTurn({ mode: 'laptop' })).ok, true);
+  assert.equal(validateGame(goodGame({ mode: 'desktop' })).ok, true);
 });
 
 test('turn: extra fields are dropped, not stored', () => {
@@ -127,7 +138,7 @@ test('game: accepts a plausible payload', () => {
   const r = validateGame(goodGame());
   assert.equal(r.ok, true);
   assert.deepEqual(Object.keys(r.value).sort(), [
-    'durationS', 'finalScore', 'gameId', 'maxCombo', 'outcome', 'turns',
+    'durationS', 'finalScore', 'gameId', 'maxCombo', 'mode', 'outcome', 'turns',
   ]);
 });
 

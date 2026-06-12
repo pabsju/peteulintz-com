@@ -62,7 +62,7 @@ export function buildTurnCard(data) {
     `<div class="stats-title">BALL ${data.turnNo} BANKED — ${data.cumulativeScore} PTS</div>`,
     `<div class="stats-big">${ordinal(Math.round(p))} PERCENTILE</div>`,
     barsHTML(data.distribution, data.cumulativeScore),
-    `<div class="stats-dim">SCORE AFTER BALL ${data.turnNo}, ${data.sampleSize} PLAYS · ` +
+    `<div class="stats-dim">SCORE AFTER BALL ${data.turnNo}, ${data.sampleSize} ${(data.mode || '').toUpperCase()} PLAYS · ` +
       `THIS BALL ALONE: ${ordinal(Math.round(data.turnPercentile))} PCTL</div>`,
   ].join('');
 }
@@ -79,7 +79,7 @@ export function buildGameCard(data) {
   const d = data.distribution;
   return [
     `<div class="stats-title">THE NUMBERS</div>`,
-    `<div class="stats-big">${ordinal(Math.round(p))} PERCENTILE OF ${data.sampleSize} GAMES</div>`,
+    `<div class="stats-big">${ordinal(Math.round(p))} PERCENTILE OF ${data.sampleSize} ${(data.mode || '').toUpperCase()} GAMES</div>`,
     barsHTML(d, data.finalScore),
     `<div class="stats-dim">MEDIAN ${Math.round(d.median)} · BEST ${data.bestScore} · ` +
       `BOARD CLEARED ${data.gamesWon}X EVER</div>`,

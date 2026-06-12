@@ -217,7 +217,7 @@ footer {
   font-weight: 700;
   letter-spacing: 0.1em;
 }
-#sound-toggle {
+#sound-toggle, #mode-toggle {
   pointer-events: auto; /* …except the button */
   align-self: flex-end;
   margin-top: 0.3rem;
@@ -231,7 +231,7 @@ footer {
   cursor: pointer;
   transition: color 0.15s ease, border-color 0.15s ease;
 }
-#sound-toggle:hover {
+#sound-toggle:hover, #mode-toggle:hover {
   color: #d97757;
   border-color: #d97757;
 }
