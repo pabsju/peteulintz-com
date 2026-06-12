@@ -8,31 +8,31 @@
 
 // --- canned fallback --------------------------------------------------------
 
-// Voice: Neil Peart watching you drop beats. Rush/Tool/cyberpunk/dungeon-
-// crawler material, same as the live commentator's system prompt.
+// Voice: see worker/lib/persona.js (the character file). Wit first; craft
+// imagery legible to anyone; at most a couple of gentle Rush nods.
 export const CANNED = [
-  "A modern-day warrior. With a paddle. Allegedly.",
-  "The Spirit of Radio called. It wants less dead air.",
-  "Subdivisions: where the ball went, and your attention didn't.",
-  "2112 is a score, not a prophecy. Dream big.",
-  "YYZ changes time signatures more smoothly than you change direction.",
-  "That wasn't a combo. That was a grace note.",
-  "La Villa Strangiato was unrehearsable. This, apparently, is too.",
-  "Closer to the Heart. Farther from the brick.",
-  "Freewill means you chose that angle on purpose.",
-  "A drum solo has fewer dropped beats than this run.",
-  "Your ice is weak, console cowboy.",
-  "Roll for initiative. Or keep standing there. Classic.",
-  "New achievement: Brick Apologist.",
-  "The announcer would have given that death a sponsor.",
-  "The Library at Mount Char keeps a catalog of your misses. It's the long wing.",
-  "Lateralus is in 9/8. You're in no time signature at all.",
-  "Working Man? Watching man.",
-  "Exit... the warrior. The ball, also exiting.",
-  "I've kept time through three-hour sets. You lost it in nine seconds.",
-  "The meek shall inherit this score.",
-  "Limelight: not where this is headed.",
-  "Every brick you miss, somewhere a cowbell goes unstruck.",
+  "That ball had a flight plan. You weren't on it.",
+  "Gravity remains undefeated.",
+  "I'd call it jazz, but jazz has rules.",
+  "Bold strategy, defending the one spot the ball isn't.",
+  "The bricks have started a betting pool.",
+  "Somewhere a metronome just filed a complaint.",
+  "I've seen soundchecks with more conviction.",
+  "Precision is a habit. So is whatever that was.",
+  "The paddle works better when it's involved.",
+  "A drummer counts to four. This is one ball.",
+  "New plan: try aiming.",
+  "Achievement unlocked: Spectator.",
+  "Your highlight reel is a still image.",
+  "That was the easy one.",
+  "You're pacing yourself. Historians will wonder for what.",
+  "Every miss is a tiny encore of the previous one.",
+  "Take your time. The bricks aren't going anywhere. Clearly.",
+  "We're closer to intermission than to an encore.",
+  "I kept time for three hours a night. You lost one ball in nine seconds.",
+  "Tom Sawyer would have caught that, and he's fictional.",
+  "The ball isn't being subtle. It's right there.",
+  "Applause from the cheap seats. Both of them.",
 ];
 
 /**
@@ -116,6 +116,7 @@ export function buildSnapshot(phase, state, recorder, latestStats, recentLines =
     lives: state.lives,
     turnNo: recorder.turnNo,
     bricksLeft: state.total - state.destroyed,
+    bricksTotal: state.total,
     maxCombo: recorder.gameMaxCombo,
     secondsElapsed: Math.round(recorder.gameTime * 10) / 10,
     percentile,
