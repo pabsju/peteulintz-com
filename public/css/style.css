@@ -342,11 +342,12 @@ footer {
   transform: translate(-50%, -50%);
 }
 
-/* The snarky observer (js/snark.js): one fading line, top-left, out of the
-   way of the legend (top-right) and caption (top-center). */
+/* The snarky observer (js/snark.js): one fading line, bottom-left — the
+   empty space above the paddle, clear of the brick text (which reaches
+   well down the pane, especially at laptop speeds). */
 .snark {
   position: absolute;
-  top: 2.9rem;
+  bottom: 64px;
   left: 1.4rem;
   max-width: 300px;
   margin: 0;
