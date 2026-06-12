@@ -6,7 +6,7 @@ import {
 
 function snap(overrides = {}) {
   return {
-    phase: 'mid', mode: 'desktop', score: 230, lives: 2, turnNo: 1, bricksLeft: 1100,
+    phase: 'mid', mode: 'desktop', score: 230, ballsLeft: 2, ballsUsed: 1, turnNo: 1, bricksLeft: 1100,
     bricksTotal: 1400, maxCombo: 4, secondsElapsed: 41.7, percentile: 38.2, sampleSize: 19,
     recentLines: ['Nice paddle. Shame about the aim.'],
     ...overrides,
@@ -38,7 +38,9 @@ test('snapshot: phase is a closed enum', () => {
 test('snapshot: numeric bounds enforced', () => {
   assert.equal(validateSnapshot(snap({ score: -1 })).ok, false);
   assert.equal(validateSnapshot(snap({ score: 1.5 })).ok, false);
-  assert.equal(validateSnapshot(snap({ lives: 11 })).ok, false);
+  assert.equal(validateSnapshot(snap({ ballsLeft: 11 })).ok, false);
+  assert.equal(validateSnapshot(snap({ ballsUsed: -1 })).ok, false);
+  assert.equal(validateSnapshot(snap({ ballsUsed: undefined })).ok, false, 'field is required');
   assert.equal(validateSnapshot(snap({ percentile: 101 })).ok, false);
   assert.equal(validateSnapshot(snap({ percentile: null })).ok, true);
   assert.equal(validateSnapshot(snap({ secondsElapsed: NaN })).ok, false);

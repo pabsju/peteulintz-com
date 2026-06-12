@@ -86,7 +86,7 @@ test('noteSpoken resets the clock and keeps only 3 recent lines', () => {
 // --- snapshot contract ---
 
 test('CONTRACT: client snapshots pass the server validator in every phase', () => {
-  const state = { mode: 'playing', score: 740, lives: 2, total: 1400, destroyed: 73 };
+  const state = { mode: 'playing', score: 740, lives: 2, maxLives: 3, total: 1400, destroyed: 73 };
   const recorder = { mode: 'laptop', turnNo: 2, gameMaxCombo: 6, gameTime: 47.31 };
   const stats = {
     turn: { cumulativePercentile: 61.2, sampleSize: 19 },
@@ -100,7 +100,7 @@ test('CONTRACT: client snapshots pass the server validator in every phase', () =
 });
 
 test('snapshot: no stats yet → null percentile, zero sample, still valid', () => {
-  const state = { mode: 'playing', score: 0, lives: 3, total: 1400, destroyed: 0 };
+  const state = { mode: 'playing', score: 0, lives: 3, maxLives: 3, total: 1400, destroyed: 0 };
   const recorder = { mode: 'desktop', turnNo: 1, gameMaxCombo: 1, gameTime: 2.5 };
   const snap = buildSnapshot('mid', state, recorder, { turn: null, game: null });
   assert.equal(snap.percentile, null);
@@ -109,7 +109,7 @@ test('snapshot: no stats yet → null percentile, zero sample, still valid', () 
 });
 
 test('snapshot: game-end phases prefer the final-score percentile', () => {
-  const state = { mode: 'over', score: 500, lives: 0, total: 1400, destroyed: 50 };
+  const state = { mode: 'over', score: 500, lives: 0, maxLives: 3, total: 1400, destroyed: 50 };
   const recorder = { mode: 'desktop', turnNo: 3, gameMaxCombo: 4, gameTime: 90 };
   const stats = {
     turn: { cumulativePercentile: 40, sampleSize: 10 },
@@ -117,4 +117,13 @@ test('snapshot: game-end phases prefer the final-score percentile', () => {
   };
   assert.equal(buildSnapshot('over', state, recorder, stats).percentile, 75);
   assert.equal(buildSnapshot('mid', state, recorder, stats).percentile, 40);
+});
+
+test('snapshot: balls fields are explicit — left in reserve vs already lost', () => {
+  const state = { mode: 'over', score: 500, lives: 0, maxLives: 3, total: 1400, destroyed: 50 };
+  const recorder = { mode: 'desktop', turnNo: 3, gameMaxCombo: 4, gameTime: 90 };
+  const snap = buildSnapshot('over', state, recorder, { turn: null, game: null });
+  assert.equal(snap.ballsLeft, 0);
+  assert.equal(snap.ballsUsed, 3, 'game over on 3 lives = all 3 balls used');
+  assert.ok(!('lives' in snap), 'ambiguous raw field no longer sent');
 });

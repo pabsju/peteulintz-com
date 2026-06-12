@@ -93,7 +93,10 @@ export function buildSnapshot(phase, state, recorder, latestStats, recentLines =
     phase,
     mode: recorder.mode,
     score: state.score,
-    lives: state.lives,
+    // Self-describing on purpose: a bare "lives" reached the model as an
+    // unexplained number once and it confabulated "one life spent" at 0-of-3.
+    ballsLeft: state.lives,
+    ballsUsed: state.maxLives - state.lives,
     turnNo: recorder.turnNo,
     bricksLeft: state.total - state.destroyed,
     bricksTotal: state.total,

@@ -32,7 +32,8 @@ export function validateSnapshot(p) {
   if (!PHASES.has(p.phase)) return fail('bad phase');
   if (!MODES.has(p.mode)) return fail('bad mode');
   if (!intIn(p.score, 0, 4_000_000)) return fail('score out of range');
-  if (!intIn(p.lives, 0, 10)) return fail('lives out of range');
+  if (!intIn(p.ballsLeft, 0, 10)) return fail('ballsLeft out of range');
+  if (!intIn(p.ballsUsed, 0, 10)) return fail('ballsUsed out of range');
   if (!intIn(p.turnNo, 0, 10)) return fail('turnNo out of range');
   if (!intIn(p.bricksLeft, 0, 10_000)) return fail('bricksLeft out of range');
   if (!intIn(p.bricksTotal, 1, 10_000) || p.bricksTotal < p.bricksLeft) return fail('bricksTotal out of range');
@@ -49,7 +50,8 @@ export function validateSnapshot(p) {
       phase: p.phase,
       mode: p.mode,
       score: p.score,
-      lives: p.lives,
+      ballsLeft: p.ballsLeft,
+      ballsUsed: p.ballsUsed,
       turnNo: p.turnNo,
       bricksLeft: p.bricksLeft,
       bricksTotal: p.bricksTotal,
