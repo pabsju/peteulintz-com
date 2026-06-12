@@ -13,10 +13,9 @@
     {
       "binding": "DB",
       "database_name": "breakout-stats",
-      // Placeholder until prod DB is created (wrangler d1 create breakout-stats
-      // — needs `wrangler login`, deferred to deploy). Local dev ignores it:
-      // `wrangler dev` keeps a real SQLite file under .wrangler/state/.
-      "database_id": "00000000-0000-0000-0000-000000000000",
+      // Production database (created 2026-06-12, region ENAM). Local dev
+      // ignores this: `wrangler dev` keeps SQLite under .wrangler/state/.
+      "database_id": "dc8d70d3-6b00-4294-81a6-952ef9596e0f",
       "migrations_dir": "migrations"
     }
   ]
