@@ -1,9 +1,2 @@
-# Editor / IDE
-.idea/
-
-# Local tooling
-.memsearch/
-
-# OS junk
-.DS_Store
-Thumbs.db
+.wrangler/
+node_modules/

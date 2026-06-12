@@ -4,6 +4,11 @@
 
 import { SITE_CONFIG } from './config.js';
 import { createGame, step, launch, resetGame, MULTIPLIERS } from './engine.js';
+import { createRecorder, tick as statsTick, send as statsSend, latest as latestStats } from './stats.js';
+
+// Stats recorder: watches the same engine events the renderer does and
+// POSTs turn/game records to /api/* (fire-and-forget; see js/stats.js).
+const recorder = createRecorder();
 
 const COLORS = {
   bg: '#141413',
@@ -276,7 +281,10 @@ function frame(now) {
   lastTime = now;
 
   const target = mouseX === null ? state.paddle.x : mouseX;
-  handleEvents(step(state, dt, target));
+  const events = step(state, dt, target);
+  handleEvents(events);
+  const records = statsTick(recorder, state, events, dt);
+  if (records.length) statsSend(records);
   draw(now, dt);
   updateLegend();
   requestAnimationFrame(frame);
@@ -323,4 +331,4 @@ const cap = document.getElementById('marquee-caption');
 if (cap) cap.textContent = SITE_CONFIG.marqueeCaption;
 
 // Read-only debug handle for headless smoke tests.
-window.__breakout = { get state() { return state; } };
+window.__breakout = { get state() { return state; }, stats: latestStats };

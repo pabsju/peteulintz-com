@@ -73,21 +73,38 @@ Static site, zero build step, zero dependencies. Vanilla ES modules.
 ## Run locally
 
 ```bash
-python3 -m http.server 8000 -d public
-# → http://localhost:8000
+npx wrangler d1 migrations apply breakout-stats --local   # once, and after new migrations
+npx wrangler dev --port 8787
+# → http://localhost:8787  (site + /api/* + local D1, no Cloudflare auth needed)
 ```
 
-(Any static server works. ES modules need http://, not file://.)
+Site-only (no stats API): `python3 -m http.server 8000 -d public` still works;
+the game runs fine and silently drops its stats POSTs.
 
 ## Test
 
 ```bash
-node --test test/*.mjs
+node --experimental-sqlite --test test/*.mjs
 ```
+
+(The flag gives node's built-in SQLite to the API tests — they run the real
+migration + real SQL against an in-memory DB. Unflagged in node ≥ 23.4.)
 
 Game logic (`public/js/engine.js`, `public/js/glyphs.js`) is pure and
 DOM-free, so the physics, collision, and text rasterization are tested in
-node directly.
+node directly. The stats pipeline is tested at four layers — see
+`docs/build-notes.md`. End-to-end check against a running `wrangler dev`:
+
+```bash
+node tools/integration_stats.mjs http://localhost:8787/   # plays a losing game, asserts API round trip
+```
+
+## Stats API
+
+The Worker (`worker/index.js`) records anonymous game stats in D1 and
+answers with percentiles. `POST /api/turn` (one ball), `POST /api/game`
+(one finished game), `GET /api/health`. Schema in `migrations/`, client
+recorder in `public/js/stats.js`, design notes in `docs/build-notes.md`.
 
 ## Editing content
 
@@ -104,16 +121,22 @@ Game text supports `A-Z 0-9 space . , ! ' & / -`. Add glyphs in
 ## Layout
 
 ```
-public/           everything deployed (Cloudflare serves only this dir)
+public/           everything deployed as static assets
   index.html      markup, left-pane content
   css/style.css   all styling
   js/config.js    editable content (game words, AI item, game tuning)
   js/glyphs.js    5x7 bitmap font + rasterizer (pure)
   js/engine.js    game physics + state (pure) — paddle/ball/combo constants
+  js/stats.js     turn/game recorder + API client (recorder is pure)
   js/game.js      canvas rendering + input (browser only)
   images/         headshot, book covers
-test/             node:test suites for the pure modules (private)
-tools/            headless smoke test (private)
+worker/           stats API (runs on asset misses; /api/* forced to Worker)
+  index.js        router
+  lib/            validation, percentile math, handlers (all node-testable)
+migrations/       D1 schema, applied via wrangler d1 migrations
+test/             node:test suites (private)
+tools/            headless smoke + integration tests (private)
+docs/             build notes / teaching journal (private)
 ```
 
 ## Deploy

@@ -1,7 +1,23 @@
 {
   "name": "peteulintz-com",
   "compatibility_date": "2026-06-11",
+  // Static site: served straight from public/, Worker not invoked for these.
   "assets": {
-    "directory": "./public"
-  }
+    "directory": "./public",
+    // API routes always reach the Worker, even if a matching asset appeared.
+    "run_worker_first": ["/api/*"]
+  },
+  // API for game stats. Requests that match no asset (i.e. /api/*) run this.
+  "main": "worker/index.js",
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "breakout-stats",
+      // Placeholder until prod DB is created (wrangler d1 create breakout-stats
+      // — needs `wrangler login`, deferred to deploy). Local dev ignores it:
+      // `wrangler dev` keeps a real SQLite file under .wrangler/state/.
+      "database_id": "00000000-0000-0000-0000-000000000000",
+      "migrations_dir": "migrations"
+    }
+  ]
 }
