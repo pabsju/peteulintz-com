@@ -6,7 +6,7 @@
 
 import { rasterizeLines } from './glyphs.js';
 
-export const BALL_SPEED = 690;
+export const BALL_SPEED = 720;
 export const PADDLE_LERP = 14; // paddle chase rate (1/s)
 
 // Combo ladder: score multiplier (and ping tone index) per consecutive

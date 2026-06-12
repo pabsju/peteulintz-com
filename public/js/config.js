@@ -18,7 +18,7 @@ export const SITE_CONFIG = {
     // resets to 1X. Hits inside the window climb 1X→2X→3X→…→10X.
     // Needs to exceed the ball's brick→paddle travel time (~1s at
     // BALL_SPEED 690) or the paddle is back to full size every return.
-    comboWindow: 1.5,
+    comboWindow: 1.7,
     brickPoints: 10,
   },
 
