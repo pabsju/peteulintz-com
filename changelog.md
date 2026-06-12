@@ -19,14 +19,14 @@ Mark each step `[x]` done, `[ ]` pending.
 
 ## Deploy
 
-- [ ] Register `peteulintz.com` at Porkbun
+- [x] Register `peteulintz.com` at Porkbun
 - [x] Push repo to GitHub (github.com/pabsju/peteulintz-com)
 - [x] Create Cloudflare Workers project (static assets), connect GitHub repo
 - [x] First deploy succeeds (peteulintz-com.pulintz.workers.dev)
-- [ ] Add custom domain `peteulintz.com` in Cloudflare
-- [ ] Point Porkbun DNS at Cloudflare (nameservers or CNAME — see README)
-- [ ] HTTPS active, `https://peteulintz.com` loads
-- [ ] `www.peteulintz.com` redirects to apex (optional)
+- [x] Add custom domain `peteulintz.com` + `www` in Cloudflare (Worker Domains tab)
+- [x] Point Porkbun DNS at Cloudflare (nameservers: gene/trace.ns.cloudflare.com)
+- [x] HTTPS active, `https://peteulintz.com` loads
+- [x] `www.peteulintz.com` serves (200)
 
 ## Log
 
