@@ -3,12 +3,21 @@
 
 import { handleTurn, handleGame, handleHealth } from './lib/handlers.js';
 import { handleCommentary } from './lib/commentary.js';
+import { makeLimiter } from './lib/ratelimit.js';
 
 const ROUTES = {
   '/api/turn': { POST: handleTurn },
   '/api/game': { POST: handleGame },
   '/api/health': { GET: handleHealth },
   '/api/commentary': { POST: handleCommentary },
+};
+
+// Per-IP, per-minute. Commentary is the expensive one (a Sonnet call each);
+// turn/game writes are cheap but D1 isn't a landfill. ~3 legit games/min max.
+const LIMITS = {
+  '/api/commentary': makeLimiter({ limit: 10 }),
+  '/api/turn': makeLimiter({ limit: 30 }),
+  '/api/game': makeLimiter({ limit: 10 }),
 };
 
 /** Pure-ish router, exported so tests can drive it without a Worker runtime. */
@@ -25,6 +34,12 @@ export async function route(request, env) {
     return new Response(JSON.stringify({ error: 'method not allowed' }), {
       status: 405,
       headers: { 'content-type': 'application/json', allow: Object.keys(methods).join(', ') },
+    });
+  }
+  const limiter = LIMITS[pathname];
+  if (limiter && !limiter(request.headers.get('cf-connecting-ip') || 'unknown')) {
+    return new Response(JSON.stringify({ error: 'rate limited' }), {
+      status: 429, headers: { 'content-type': 'application/json', 'retry-after': '60' },
     });
   }
   try {

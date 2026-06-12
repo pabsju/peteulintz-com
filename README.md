@@ -9,7 +9,7 @@ Personal site. Two panes, modeled on claude.com/code-with-claude:
 ### Game rules
 
 - Each character cell is a brick worth 10 points times the combo multiplier.
-- Combo: bricks hit within the combo window (`comboWindow`, 1.2s) climb a ten-step ladder —
+- Combo: bricks hit within the combo window (`comboWindow`, 1.3s) climb a ten-step ladder —
   1X, 2X, 3X … 10X — and the hit "ping" climbs ten pentatonic tones with
   it (C5 → A6). Miss the window and it resets to 1X.
 - Every brick hit shows an expanding ring at the impact point and pops the

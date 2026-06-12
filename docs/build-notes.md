@@ -288,7 +288,36 @@ ball died in ~1s and it said "One ball down in one second — that paddle
 must be decorative." E2e captures snark lines and screenshots; the line
 renders top-left, italic, with the orange `»`.
 
-**Still owed before merge to master** (deploy checklist, Phase 4):
-`npx wrangler login` → `wrangler d1 create breakout-stats` → paste real
-`database_id` into wrangler.jsonc → `wrangler d1 migrations apply
-breakout-stats --remote` → merge. Until then the branch is local-only.
+---
+
+## Phase 4 (2026-06-12): hardening + seeding + voice tune
+
+- **Persona shift (user call):** commentator is now Neil Peart — erudite,
+  exacting, timekeeping metaphors. Material pool: Rush (titles/lore/tour
+  moments, alluded not quoted — lyric passages are copyrighted, titles and
+  bent phrases are not), Tool, cyberpunk, Dungeon Crawler Carl, The Library
+  at Mount Char. Prompt instructs "roughly half plain dry observation" so
+  references don't become a tic. Canned lines rewritten to match.
+- **Game feel:** BALL_SPEED 620→660, comboWindow 1.2→1.3s.
+- **Rate limiting** (`worker/lib/ratelimit.js`): per-IP fixed window in
+  isolate memory — commentary 10/min (the Sonnet-cost one), turn 30/min,
+  game 10/min, health unlimited. Honest scope: per-isolate counters mean a
+  distributed abuser gets limit×isolates; this stops curl loops, not
+  botnets, and that's the right tradeoff for a personal site (the durable
+  alternative is a Durable Object). Verified live: 12 rapid posts → 429s.
+- **Seeding** (`tools/seed_games.mjs`): plays REAL headless games at seven
+  skill levels (paddle-tracking wander) — no synthetic rows, the
+  distribution is made of actual plays through the actual pipeline. Run
+  against prod once after deploy so player #1 isn't compared to an empty
+  table. Local trial: skill 0.3 → 40 pts, skill 0.75 → 3490 pts.
+
+### Deploy checklist (the only part needing human auth)
+
+1. `npx wrangler login` (interactive — user runs it)
+2. `npx wrangler d1 create breakout-stats` → paste real `database_id` into
+   wrangler.jsonc (replacing the zeros placeholder)
+3. `npx wrangler d1 migrations apply breakout-stats --remote`
+4. `npx wrangler secret put ANTHROPIC_API_KEY`
+5. Merge `stats-api` → `master`, push (auto-deploys)
+6. `node tools/seed_games.mjs https://peteulintz.com/ 30`
+7. Verify: health endpoint, one played game, stats cards, a live snark line

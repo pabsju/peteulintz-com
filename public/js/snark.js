@@ -8,29 +8,31 @@
 
 // --- canned fallback --------------------------------------------------------
 
+// Voice: Neil Peart watching you drop beats. Rush/Tool/cyberpunk/dungeon-
+// crawler material, same as the live commentator's system prompt.
 export const CANNED = [
-  "The ball comes back down. That part's on you.",
-  "I've watched a screensaver play this better.",
-  "Bold of you to call that a strategy.",
-  "The paddle moves sideways. Both directions, even.",
-  "Somewhere, a leaderboard is laughing.",
-  "That brick had a family. Keep going.",
-  "You're really letting gravity do all the work.",
-  "The bricks called. They're not worried.",
-  "Tell me you're warming up.",
-  "Ah, the rare defensive breakout strategy.",
-  "Blink twice if the mouse is unplugged.",
-  "I'd offer tips, but I respect the chaos.",
-  "That was almost a combo.",
-  "The ball is the round one.",
-  "Statistically, someone has to be this player.",
-  "Don't worry, nobody's watching. Except me.",
-  "A bold reinterpretation of 'aim'.",
-  "The paddle isn't decorative.",
-  "I've seen the median. You're keeping it company.",
-  "Pure jazz. No notes.",
-  "Physics called. It wants its dignity back.",
-  "Encore? At this rate, intermission.",
+  "A modern-day warrior. With a paddle. Allegedly.",
+  "The Spirit of Radio called. It wants less dead air.",
+  "Subdivisions: where the ball went, and your attention didn't.",
+  "2112 is a score, not a prophecy. Dream big.",
+  "YYZ changes time signatures more smoothly than you change direction.",
+  "That wasn't a combo. That was a grace note.",
+  "La Villa Strangiato was unrehearsable. This, apparently, is too.",
+  "Closer to the Heart. Farther from the brick.",
+  "Freewill means you chose that angle on purpose.",
+  "A drum solo has fewer dropped beats than this run.",
+  "Your ice is weak, console cowboy.",
+  "Roll for initiative. Or keep standing there. Classic.",
+  "New achievement: Brick Apologist.",
+  "The announcer would have given that death a sponsor.",
+  "The Library at Mount Char keeps a catalog of your misses. It's the long wing.",
+  "Lateralus is in 9/8. You're in no time signature at all.",
+  "Working Man? Watching man.",
+  "Exit... the warrior. The ball, also exiting.",
+  "I've kept time through three-hour sets. You lost it in nine seconds.",
+  "The meek shall inherit this score.",
+  "Limelight: not where this is headed.",
+  "Every brick you miss, somewhere a cowbell goes unstruck.",
 ];
 
 /**
