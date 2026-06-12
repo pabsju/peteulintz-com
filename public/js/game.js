@@ -6,6 +6,7 @@ import { SITE_CONFIG } from './config.js';
 import { createGame, step, launch, resetGame, MULTIPLIERS } from './engine.js';
 import { createRecorder, tick as statsTick, send as statsSend, latest as latestStats } from './stats.js';
 import { initStatsUI, updateStatsUI } from './statsui.js';
+import { initSnark, snarkTick } from './snark.js';
 
 // Stats recorder: watches the same engine events the renderer does and
 // POSTs turn/game records to /api/* (fire-and-forget; see js/stats.js).
@@ -290,6 +291,7 @@ function frame(now) {
   try {
     const records = statsTick(recorder, state, events, dt);
     if (records.length) statsSend(records);
+    snarkTick(state, events, dt, recorder, latestStats);
   } catch { /* keep playing */ }
   draw(now, dt);
   updateLegend();
@@ -331,6 +333,7 @@ window.addEventListener('resize', () => {
 
 // Wait for the mono font so glyph metrics are right on first paint.
 initStatsUI();
+initSnark();
 document.fonts.ready.then(() => {
   resize();
   requestAnimationFrame(frame);

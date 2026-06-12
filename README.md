@@ -106,6 +106,13 @@ answers with percentiles. `POST /api/turn` (one ball), `POST /api/game`
 (one finished game), `GET /api/health`. Schema in `migrations/`, client
 recorder in `public/js/stats.js`, design notes in `docs/build-notes.md`.
 
+`POST /api/commentary` is the snarky observer: Claude Sonnet heckles the
+player based on live numbers (`worker/lib/commentary.js`, client cadence in
+`public/js/snark.js`). Needs `ANTHROPIC_API_KEY` — locally via a gitignored
+`.dev.vars` file (`ANTHROPIC_API_KEY=sk-...`), in prod via
+`npx wrangler secret put ANTHROPIC_API_KEY`. Without it the endpoint
+returns 503 and the client falls back to canned lines.
+
 ## Editing content
 
 | What | Where |

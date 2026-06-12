@@ -236,6 +236,58 @@ structurally instead of by good intentions. Lesson: test from a non-localhost
 origin at least once — localhost is a privileged environment that hides a
 whole class of failures.
 
+---
+
+## Phase 3 (2026-06-12): the snarky observer
+
+### Shape
+
+Client (`public/js/snark.js`) decides WHEN; server (`worker/lib/
+commentary.js`) decides WHAT. Cadence: jittered 14-26s mid-play (a fixed 20s
+would feel metronomic — jitter is what makes it feel like someone's actually
+watching), a bonus jab on ball loss behind an 8s cooldown, and always a
+closer at game end. One request in flight at a time; on any failure the
+client falls back to canned lines.
+
+### Concept: prompt-injection posture for a public LLM endpoint
+
+`/api/commentary` is reachable by anyone with curl, and its input ends up in
+a prompt. The defense is structural: **the snapshot is numbers and closed
+enums only** — there is no field where a caller can write prose. The one
+exception, `recentLines` (the model needs them to avoid repeating itself),
+is capped at 3 × 160 chars and scrubbed to printable ASCII. Worst case, an
+attacker steers the joke on their own screen. Output is sanitized to one
+capped line, and `max_tokens: 80` bounds cost per call (~$0.002 with
+Sonnet). Real rate limiting lands in Phase 4.
+
+### Concept: the shuffle bag
+
+Plain `random()` over 22 canned lines repeats embarrassingly fast (birthday
+problem: ~50% chance of a repeat within 6 draws). A shuffle bag deals the
+whole deck in random order before reshuffling, with one extra rule — never
+the same line twice in a row across refills. Old game-dev trick; this is
+what "random but doesn't feel broken" usually means in games.
+
+### Persona prompt notes
+
+Lives in `worker/lib/commentary.js` (`SYSTEM`). The parts that matter:
+"about one time in four, go very short" (user wanted varied length — LLMs
+otherwise converge on uniform-length output); "ground the joke in the
+numbers, specific beats generic" (this is what makes it commentary rather
+than a fortune cookie); explicit semantics for `percentile` and
+`sampleSize` so the model can mock a thin sample ("42nd percentile of 6
+games" deserves it); guardrails as content rules, not vibes (profanity cap,
+mock the gameplay never the person).
+
+### Verification
+
+118/118 tests (validation, sanitizer, handler with fake fetcher, bag
+no-repeat over 300 draws, cadence windows, snapshot↔validator contract).
+Live: real Sonnet through `wrangler dev` produced grounded lines — the
+ball died in ~1s and it said "One ball down in one second — that paddle
+must be decorative." E2e captures snark lines and screenshots; the line
+renders top-left, italic, with the orange `»`.
+
 **Still owed before merge to master** (deploy checklist, Phase 4):
 `npx wrangler login` → `wrangler d1 create breakout-stats` → paste real
 `database_id` into wrangler.jsonc → `wrangler d1 migrations apply

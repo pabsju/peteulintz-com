@@ -2,11 +2,13 @@
 // runs; only /api/* (run_worker_first) and asset misses reach fetch().
 
 import { handleTurn, handleGame, handleHealth } from './lib/handlers.js';
+import { handleCommentary } from './lib/commentary.js';
 
 const ROUTES = {
   '/api/turn': { POST: handleTurn },
   '/api/game': { POST: handleGame },
   '/api/health': { GET: handleHealth },
+  '/api/commentary': { POST: handleCommentary },
 };
 
 /** Pure-ish router, exported so tests can drive it without a Worker runtime. */

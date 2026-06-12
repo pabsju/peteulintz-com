@@ -68,6 +68,7 @@ try {
 
   const deadline = Date.now() + TIMEOUT_MS;
   let summary = null;
+  let lastSnark = null;
   let cardShots = { turn: false, game: false };
   while (Date.now() < deadline) {
     await sleep(250);
@@ -75,15 +76,21 @@ try {
       const b = window.__breakout;
       if (!b || !b.state) return null;
       const card = document.getElementById('stats-card');
+      const snark = document.getElementById('snark');
       return JSON.stringify({
         mode: b.state.mode, score: b.state.score, lives: b.state.lives,
         cardVisible: !!card && !card.hidden,
         cardText: card && !card.hidden ? card.innerText.replace(/\\n/g, ' | ') : null,
+        snark: snark && snark.classList.contains('show') ? snark.textContent : null,
         turnResponse: b.stats.turn, gameResponse: b.stats.game,
       });
     })()`);
     if (!snap) continue;
     const s = JSON.parse(snap);
+    if (s.snark && s.snark !== lastSnark) {
+      lastSnark = s.snark;
+      console.log('SNARK:', s.snark);
+    }
     if (!cardShots.turn && s.mode === 'ready' && s.cardVisible) {
       cardShots.turn = true;
       console.log('TURN CARD:', s.cardText);

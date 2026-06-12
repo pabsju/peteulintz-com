@@ -341,3 +341,30 @@ footer {
   top: 24%;
   transform: translate(-50%, -50%);
 }
+
+/* The snarky observer (js/snark.js): one fading line, top-left, out of the
+   way of the legend (top-right) and caption (top-center). */
+.snark {
+  position: absolute;
+  top: 2.9rem;
+  left: 1.4rem;
+  max-width: 300px;
+  margin: 0;
+  font-family: 'IBM Plex Mono', monospace;
+  font-style: italic;
+  font-size: 0.78rem;
+  line-height: 1.55;
+  color: #b8a99c;
+  text-align: left;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.6s ease;
+}
+.snark.show {
+  opacity: 1;
+}
+.snark::before {
+  content: '» ';
+  color: #d97757;
+  font-style: normal;
+}
