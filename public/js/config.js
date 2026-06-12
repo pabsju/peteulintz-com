@@ -16,7 +16,9 @@ export const SITE_CONFIG = {
     lives: 3,
     // Seconds allowed between brick hits before the combo multiplier
     // resets to 1X. Hits inside the window climb 1X→2X→3X→…→10X.
-    comboWindow: 0.4,
+    // Needs to exceed the ball's brick→paddle travel time (~1s at
+    // BALL_SPEED 620) or the paddle is back to full size every return.
+    comboWindow: 1.2,
     brickPoints: 10,
   },
 
