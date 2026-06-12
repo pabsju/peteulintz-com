@@ -216,6 +216,26 @@ data and correct math (final 1510 among {150, 970, 1510} → 83rd percentile,
 median 970 — hand-checked). Screenshots eyeballed for placement after one
 iteration (first cut put the turn card on top of the marquee text).
 
+### Production bug #1 (caught pre-production): secure-context APIs
+
+First real-browser viewing (http://192.168.1.30:8000, remote machine) showed
+a blank game. Root cause chain worth remembering:
+
+1. `crypto.randomUUID` is a **secure-context-only** API: available on https
+   and on localhost, absent on plain-http LAN IPs. Every localhost test —
+   unit, curl, headless e2e — passed while every LAN view was broken.
+2. The recorder called it on frame one, threw, and the exception killed the
+   whole requestAnimationFrame loop. Stats code took gameplay down — exactly
+   what the design said must never happen. "Fire-and-forget" had covered the
+   network but not the recorder itself.
+
+Fixes: `uuidv4()` falls back to `crypto.getRandomValues` (available in all
+contexts) with correct version/variant bits; and game.js now wraps the stats
+calls in try/catch, so the never-break-gameplay rule is enforced
+structurally instead of by good intentions. Lesson: test from a non-localhost
+origin at least once — localhost is a privileged environment that hides a
+whole class of failures.
+
 **Still owed before merge to master** (deploy checklist, Phase 4):
 `npx wrangler login` → `wrangler d1 create breakout-stats` → paste real
 `database_id` into wrangler.jsonc → `wrangler d1 migrations apply

@@ -4,8 +4,31 @@
 // validators — the client/server contract test.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createRecorder, tick, send, latest } from '../public/js/stats.js';
+import { createRecorder, tick, send, latest, uuidv4 } from '../public/js/stats.js';
 import { validateTurn, validateGame } from '../worker/lib/validate.js';
+
+test('uuidv4 fallback: valid v4 UUIDs the server accepts, even without crypto.randomUUID', () => {
+  // Simulate an insecure context (http over LAN), where randomUUID is absent.
+  const real = crypto.randomUUID;
+  try {
+    Object.defineProperty(globalThis.crypto, 'randomUUID', { value: undefined, configurable: true });
+    const seen = new Set();
+    for (let i = 0; i < 100; i++) {
+      const id = uuidv4();
+      assert.match(id, /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+      seen.add(id);
+    }
+    assert.equal(seen.size, 100, 'no collisions in 100 draws');
+    // The server's validator must accept these ids.
+    const v = validateTurn({
+      gameId: uuidv4(), turnNo: 1, turnScore: 0, cumulativeScore: 0,
+      bricks: 0, maxCombo: 1, durationS: 1,
+    });
+    assert.equal(v.ok, true);
+  } finally {
+    Object.defineProperty(globalThis.crypto, 'randomUUID', { value: real, configurable: true });
+  }
+});
 
 // Deterministic ids for tests.
 const ids = () => {

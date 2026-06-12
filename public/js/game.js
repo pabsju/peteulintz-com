@@ -284,11 +284,18 @@ function frame(now) {
   const target = mouseX === null ? state.paddle.x : mouseX;
   const events = step(state, dt, target);
   handleEvents(events);
-  const records = statsTick(recorder, state, events, dt);
-  if (records.length) statsSend(records);
+  // Stats are decoration: any failure in recording or UI must never take
+  // the render loop down (learned the hard way — crypto.randomUUID missing
+  // on insecure origins killed the first frame).
+  try {
+    const records = statsTick(recorder, state, events, dt);
+    if (records.length) statsSend(records);
+  } catch { /* keep playing */ }
   draw(now, dt);
   updateLegend();
-  updateStatsUI(state);
+  try {
+    updateStatsUI(state);
+  } catch { /* keep playing */ }
   requestAnimationFrame(frame);
 }
 
