@@ -295,8 +295,9 @@ footer {
   background: rgba(20, 20, 19, 0.95);
   border: 1px solid #3a372f;
   padding: 0.9rem 1.2rem;
-  min-width: 280px;
-  max-width: 420px;
+  min-width: 320px;
+  max-width: 560px;
+  width: 70%;
   text-align: center;
   font-family: 'IBM Plex Mono', monospace;
   color: #ebe7de;
@@ -312,12 +313,41 @@ footer {
   color: #d97757;
   margin-top: 0.3rem;
 }
+/* Labeled histogram (statsui.js histogramHTML): y axis = play count,
+   x axis = score range. */
+.stats-card .histo {
+  display: flex;
+  gap: 6px;
+  margin: 0.7rem 0 0.3rem;
+  text-align: left;
+}
+.stats-card .histo-y {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-end;
+  font-size: 0.55rem;
+  letter-spacing: 0.05em;
+  color: #6b665c;
+  /* y tick labels stop short of the x-axis row below */
+  padding-bottom: 0.85rem;
+}
+.stats-card .histo-ylabel {
+  writing-mode: sideways-lr;
+  letter-spacing: 0.12em;
+}
+.stats-card .histo-main {
+  flex: 1;
+  min-width: 0;
+}
 .stats-card .bars {
   display: flex;
   align-items: flex-end;
   gap: 2px;
-  height: 44px;
-  margin: 0.6rem 0 0.4rem;
+  height: 76px;
+  border-left: 1px solid #4a463c;
+  border-bottom: 1px solid #4a463c;
+  padding: 0 2px;
 }
 .stats-card .bar {
   flex: 1;
@@ -326,6 +356,24 @@ footer {
 }
 .stats-card .bar.me {
   background: #d97757;
+}
+.stats-card .histo-x {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+  font-size: 0.55rem;
+  letter-spacing: 0.05em;
+  color: #6b665c;
+  margin-top: 3px;
+}
+.stats-card .histo-xlabel {
+  letter-spacing: 0.12em;
+}
+.stats-card .stats-sub {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #d97757;
+  margin-top: 0.7rem;
 }
 .stats-card .stats-dim {
   font-size: 0.62rem;
@@ -338,8 +386,8 @@ footer {
    in the lower third, so the card stays out of its way. */
 .stats-card.at-top {
   bottom: auto;
-  top: 24%;
-  transform: translate(-50%, -50%);
+  top: 7%;
+  transform: translateX(-50%);
 }
 
 /* The snarky observer (js/snark.js): one fading line, bottom-left — the

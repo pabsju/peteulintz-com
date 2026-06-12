@@ -87,7 +87,7 @@ export function buildSnapshot(phase, state, recorder, latestStats, recentLines =
   const gameEnd = phase === 'over' || phase === 'won';
   const src = gameEnd && latestStats.game ? latestStats.game : latestStats.turn;
   const percentile = src
-    ? (src.scorePercentile ?? src.cumulativePercentile ?? null)
+    ? (src.scorePercentile ?? src.turnPercentile ?? null)
     : null;
   return {
     phase,

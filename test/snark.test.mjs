@@ -89,7 +89,7 @@ test('CONTRACT: client snapshots pass the server validator in every phase', () =
   const state = { mode: 'playing', score: 740, lives: 2, maxLives: 3, total: 1400, destroyed: 73 };
   const recorder = { mode: 'laptop', turnNo: 2, gameMaxCombo: 6, gameTime: 47.31 };
   const stats = {
-    turn: { cumulativePercentile: 61.2, sampleSize: 19 },
+    turn: { turnPercentile: 61.2, sampleSize: 19 },
     game: { scorePercentile: 88.8, sampleSize: 21 },
   };
   for (const phase of ['mid', 'life', 'over', 'won']) {
@@ -112,7 +112,7 @@ test('snapshot: game-end phases prefer the final-score percentile', () => {
   const state = { mode: 'over', score: 500, lives: 0, maxLives: 3, total: 1400, destroyed: 50 };
   const recorder = { mode: 'desktop', turnNo: 3, gameMaxCombo: 4, gameTime: 90 };
   const stats = {
-    turn: { cumulativePercentile: 40, sampleSize: 10 },
+    turn: { turnPercentile: 40, sampleSize: 10 },
     game: { scorePercentile: 75, sampleSize: 11 },
   };
   assert.equal(buildSnapshot('over', state, recorder, stats).percentile, 75);

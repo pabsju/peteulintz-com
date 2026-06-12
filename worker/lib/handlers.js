@@ -41,8 +41,9 @@ async function readJson(request) {
 }
 
 /**
- * POST /api/turn — record one ball, answer with where it sits in the
- * distribution of everyone's ball N.
+ * POST /api/turn — record one ball, answer with where this ball's score sits
+ * among every ball ever played in this mode. All balls are treated as
+ * independent draws; turn_no does not partition the distribution.
  */
 export async function handleTurn(request, env) {
   const body = await readJson(request);
@@ -57,35 +58,31 @@ export async function handleTurn(request, env) {
      ON CONFLICT (game_id, turn_no) DO NOTHING`
   ).bind(t.gameId, t.mode, t.turnNo, t.turnScore, t.cumulativeScore, t.bricks, t.maxCombo, t.durationS).run();
 
-  // One pass over everyone's ball-N rows IN THIS MODE: counts below/at this
-  // player's cumulative score and this ball's score. Laptop and desktop
-  // scores aren't comparable, so they never share a distribution.
+  // One pass over every ball IN THIS MODE: where does this ball's score
+  // rank? Laptop and desktop scores aren't comparable, so they never share
+  // a distribution.
   const agg = await env.DB.prepare(
     `SELECT COUNT(*) AS total,
-            SUM(cumulative_score < ?1) AS cum_below,
-            SUM(cumulative_score = ?1) AS cum_ties,
-            SUM(turn_score < ?2) AS turn_below,
-            SUM(turn_score = ?2) AS turn_ties
-     FROM turns WHERE turn_no = ?3 AND mode = ?4`
-  ).bind(t.cumulativeScore, t.turnScore, t.turnNo, t.mode).first();
+            SUM(turn_score < ?1) AS below,
+            SUM(turn_score = ?1) AS ties
+     FROM turns WHERE mode = ?2`
+  ).bind(t.turnScore, t.mode).first();
 
-  // Distribution of everyone's cumulative score after ball N — the client
-  // draws this with a "you are here" marker.
+  // Distribution of every ball score ever — the client draws this with a
+  // "you are here" marker.
   const dist = await env.DB.prepare(
-    `SELECT cumulative_score FROM turns WHERE turn_no = ? AND mode = ? LIMIT ${HISTOGRAM_ROW_CAP}`
-  ).bind(t.turnNo, t.mode).all();
+    `SELECT turn_score FROM turns WHERE mode = ? LIMIT ${HISTOGRAM_ROW_CAP}`
+  ).bind(t.mode).all();
 
   return json({
     turnNo: t.turnNo,
     mode: t.mode,
-    cumulativeScore: t.cumulativeScore, // echoed for the client's marker
-    turnScore: t.turnScore,
+    cumulativeScore: t.cumulativeScore, // echoed for the client's staleness guard
+    turnScore: t.turnScore, // echoed for the client's marker
     sampleSize: agg.total,
-    cumulativePercentile: roundPercentile(
-      percentileRank(agg.cum_below ?? 0, agg.cum_ties ?? 0, agg.total)),
     turnPercentile: roundPercentile(
-      percentileRank(agg.turn_below ?? 0, agg.turn_ties ?? 0, agg.total)),
-    distribution: summarize((dist.results ?? []).map((r) => r.cumulative_score)),
+      percentileRank(agg.below ?? 0, agg.ties ?? 0, agg.total)),
+    distribution: summarize((dist.results ?? []).map((r) => r.turn_score)),
   });
 }
 
@@ -106,28 +103,40 @@ export async function handleGame(request, env) {
      ON CONFLICT (id) DO NOTHING`
   ).bind(g.gameId, g.mode, g.finalScore, g.turns, g.outcome, g.maxCombo, g.durationS).run();
 
+  // Two game-end distributions: total score, and average score per ball
+  // (final_score / balls used). The player's own row is already inserted,
+  // so the float avg ties itself exactly — same expression both sides.
+  const avgPerBall = g.finalScore / g.turns;
   const agg = await env.DB.prepare(
     `SELECT COUNT(*) AS total,
             SUM(final_score < ?1) AS below,
             SUM(final_score = ?1) AS ties,
+            SUM(final_score * 1.0 / turns < ?2) AS avg_below,
+            SUM(final_score * 1.0 / turns = ?2) AS avg_ties,
             MAX(final_score) AS best,
             SUM(outcome = 'won') AS wins
-     FROM games WHERE mode = ?2`
-  ).bind(g.finalScore, g.mode).first();
+     FROM games WHERE mode = ?3`
+  ).bind(g.finalScore, avgPerBall, g.mode).first();
 
   const dist = await env.DB.prepare(
-    `SELECT final_score FROM games WHERE mode = ? LIMIT ${HISTOGRAM_ROW_CAP}`
+    `SELECT final_score, final_score * 1.0 / turns AS avg_per_ball
+     FROM games WHERE mode = ? LIMIT ${HISTOGRAM_ROW_CAP}`
   ).bind(g.mode).all();
+  const rows = dist.results ?? [];
 
   return json({
     finalScore: g.finalScore, // echoed for the client's marker
+    avgPerBall, // raw float; client rounds for display, marker needs precision
     mode: g.mode,
     sampleSize: agg.total,
     scorePercentile: roundPercentile(
       percentileRank(agg.below ?? 0, agg.ties ?? 0, agg.total)),
+    avgPercentile: roundPercentile(
+      percentileRank(agg.avg_below ?? 0, agg.avg_ties ?? 0, agg.total)),
     bestScore: agg.best ?? null,
     gamesWon: agg.wins ?? 0,
-    distribution: summarize((dist.results ?? []).map((r) => r.final_score)),
+    distribution: summarize(rows.map((r) => r.final_score)),
+    avgDistribution: summarize(rows.map((r) => r.avg_per_ball)),
   });
 }
 

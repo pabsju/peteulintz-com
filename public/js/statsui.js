@@ -40,30 +40,49 @@ export function barSpecs(distribution, markerValue) {
   }));
 }
 
-function barsHTML(distribution, markerValue) {
+/**
+ * One labeled histogram: y axis = play count (0 to tallest bucket), x axis
+ * = score range (bin edges run min→max). Empty string when there's nothing
+ * worth drawing.
+ */
+export function histogramHTML(distribution, markerValue, xLabel, yLabel) {
   const specs = barSpecs(distribution, markerValue);
   if (!specs.length) return '';
+  const top = Math.max(...distribution.counts);
   const bars = specs
     .map((b) => `<i class="${b.me ? 'bar me' : 'bar'}" style="height:${Math.max(4, b.pct)}%"></i>`)
     .join('');
-  return `<div class="bars">${bars}</div>`;
+  return [
+    `<div class="histo">`,
+    `<div class="histo-y"><span>${top}</span><span class="histo-ylabel">${yLabel}</span><span>0</span></div>`,
+    `<div class="histo-main">`,
+    `<div class="bars">${bars}</div>`,
+    `<div class="histo-x"><span>${Math.round(distribution.min)}</span>` +
+      `<span class="histo-xlabel">${xLabel}</span>` +
+      `<span>${Math.round(distribution.max)}</span></div>`,
+    `</div>`,
+    `</div>`,
+  ].join('');
 }
 
-/** Between-ball card. `data` is the /api/turn response. */
+/**
+ * Between-ball card. `data` is the /api/turn response: this ball's score
+ * ranked against every ball ever played in the mode — no
+ * cumulative-as-of-ball-N stat, all balls independent.
+ */
 export function buildTurnCard(data) {
-  const p = data.cumulativePercentile;
+  const p = data.turnPercentile;
   if (data.sampleSize <= 1 || p === null) {
     return [
-      `<div class="stats-title">BALL ${data.turnNo} BANKED — ${data.cumulativeScore} PTS</div>`,
-      `<div class="stats-dim">FIRST BALL-${data.turnNo} ON RECORD. YOU SET THE BAR.</div>`,
+      `<div class="stats-title">BALL ${data.turnNo} — ${data.turnScore} PTS</div>`,
+      `<div class="stats-dim">FIRST BALL ON RECORD. YOU SET THE BAR.</div>`,
     ].join('');
   }
   return [
-    `<div class="stats-title">BALL ${data.turnNo} BANKED — ${data.cumulativeScore} PTS</div>`,
-    `<div class="stats-big">${ordinal(Math.round(p))} PERCENTILE</div>`,
-    barsHTML(data.distribution, data.cumulativeScore),
-    `<div class="stats-dim">SCORE AFTER BALL ${data.turnNo}, ${data.sampleSize} ${(data.mode || '').toUpperCase()} PLAYS · ` +
-      `THIS BALL ALONE: ${ordinal(Math.round(data.turnPercentile))} PCTL</div>`,
+    `<div class="stats-title">BALL ${data.turnNo} — ${data.turnScore} PTS</div>`,
+    `<div class="stats-big">${ordinal(Math.round(p))} PERCENTILE OF ${data.sampleSize} ${(data.mode || '').toUpperCase()} BALLS</div>`,
+    histogramHTML(data.distribution, data.turnScore, 'BALL SCORE', 'BALLS'),
+    `<div class="stats-dim">EVERY BALL EVER PLAYED, RANKED ALONE · GAME SO FAR: ${data.cumulativeScore} PTS</div>`,
   ].join('');
 }
 
@@ -77,10 +96,17 @@ export function buildGameCard(data) {
     ].join('');
   }
   const d = data.distribution;
+  const avgBlock = data.avgDistribution && data.avgPercentile !== null
+    ? [
+      `<div class="stats-sub">${Math.round(data.avgPerBall)} PTS PER BALL — ${ordinal(Math.round(data.avgPercentile))} PCTL</div>`,
+      histogramHTML(data.avgDistribution, data.avgPerBall, 'AVG SCORE PER BALL', 'GAMES'),
+    ].join('')
+    : '';
   return [
     `<div class="stats-title">THE NUMBERS</div>`,
     `<div class="stats-big">${ordinal(Math.round(p))} PERCENTILE OF ${data.sampleSize} ${(data.mode || '').toUpperCase()} GAMES</div>`,
-    barsHTML(d, data.finalScore),
+    histogramHTML(d, data.finalScore, 'TOTAL SCORE', 'GAMES'),
+    avgBlock,
     `<div class="stats-dim">MEDIAN ${Math.round(d.median)} · BEST ${data.bestScore} · ` +
       `BOARD CLEARED ${data.gamesWon}X EVER</div>`,
   ].join('');

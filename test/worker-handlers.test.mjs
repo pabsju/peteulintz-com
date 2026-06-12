@@ -89,7 +89,7 @@ test('first turn ever: stored, ranks at the median of a sample of 1', async () =
   const body = await res.json();
   assert.deepEqual(body, {
     turnNo: 1, mode: 'desktop', cumulativeScore: 200, turnScore: 200, sampleSize: 1,
-    cumulativePercentile: 50, turnPercentile: 50,
+    turnPercentile: 50,
     distribution: { n: 1, min: 200, max: 200, median: 200, counts: [1] },
   });
 });
@@ -106,7 +106,7 @@ test('modes never share a distribution', async () => {
   })), env);
   const body = await res.json();
   assert.equal(body.sampleSize, 1, 'laptop sample is laptop-only');
-  assert.equal(body.cumulativePercentile, 50, 'sole laptop play sits at the median');
+  assert.equal(body.turnPercentile, 50, 'sole laptop ball sits at the median');
   // Same isolation for completed games.
   await route(post('/api/game', gamePayload({ gameId: uuid(1), mode: 'desktop', finalScore: 9000 })), env);
   const g = await route(post('/api/game', gamePayload({ gameId: uuid(2), mode: 'laptop', finalScore: 300 })), env);
@@ -140,9 +140,8 @@ test('percentiles rank correctly across players', async () => {
   const top = await last.json();
   // 1000 vs {100, 200, 1000}: 2 below + 0.5 tie of 3 → 83.3
   assert.equal(top.sampleSize, 3);
-  assert.equal(top.cumulativePercentile, 83.3);
   assert.equal(top.turnPercentile, 83.3);
-  // Distribution covers all three ball-1 scores.
+  // Distribution covers all three ball scores.
   assert.equal(top.distribution.n, 3);
   assert.equal(top.distribution.min, 100);
   assert.equal(top.distribution.max, 1000);
@@ -150,13 +149,13 @@ test('percentiles rank correctly across players', async () => {
   assert.equal(top.distribution.counts.reduce((a, b) => a + b, 0), 3);
 });
 
-test('turn 2 distribution only compares against other turn 2s', async () => {
+test('every ball pools into one distribution regardless of turn number', async () => {
   const env = { DB: makeDB() };
   // Player 1: ball 1 = 1000.
   await route(post('/api/turn', turnPayload({
     gameId: uuid(1), bricks: 100, turnScore: 1000, cumulativeScore: 1000,
   })), env);
-  // Player 2: ball 1 = 100, then ball 2 = +100 → cumulative 200.
+  // Player 2: ball 1 = 100, then ball 2 = 100 → cumulative 200.
   await route(post('/api/turn', turnPayload({
     gameId: uuid(2), bricks: 10, turnScore: 100, cumulativeScore: 100,
   })), env);
@@ -164,8 +163,11 @@ test('turn 2 distribution only compares against other turn 2s', async () => {
     gameId: uuid(2), turnNo: 2, bricks: 10, turnScore: 100, cumulativeScore: 200,
   })), env);
   const body = await res.json();
-  assert.equal(body.sampleSize, 1, 'only one ball-2 exists, the 1000-point ball 1 is invisible');
-  assert.equal(body.cumulativePercentile, 50);
+  assert.equal(body.sampleSize, 3, 'all balls ever played, turn_no does not partition');
+  // 100 vs {1000, 100, 100}: 0 below + half of 2 ties of 3 → 33.3
+  assert.equal(body.turnPercentile, 33.3);
+  assert.equal(body.distribution.n, 3);
+  assert.equal(body.distribution.max, 1000, 'ball-1 monster visible to a ball-2 ranking');
 });
 
 // --- /api/game semantics ---
@@ -183,6 +185,13 @@ test('game record: stored, summary aggregates returned', async () => {
   assert.equal(body.finalScore, 600, 'own score echoed for the marker');
   assert.equal(body.distribution.median, 600);
   assert.equal(body.distribution.n, 3);
+  // Second distribution: average score per ball. All games used turns: 3,
+  // so avgs are {100, 300, 200} and this game's 200 sits at the median.
+  assert.equal(body.avgPerBall, 200);
+  assert.equal(body.avgPercentile, 50);
+  assert.equal(body.avgDistribution.n, 3);
+  assert.equal(body.avgDistribution.min, 100);
+  assert.equal(body.avgDistribution.max, 300);
 });
 
 test('duplicate game POST is idempotent', async () => {
