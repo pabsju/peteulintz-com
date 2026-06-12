@@ -45,6 +45,19 @@ export function layoutCells(lines, width, height) {
   return { cells, cellSize, originX, originY };
 }
 
+/**
+ * Scale a tuned ball speed to the actual board size. Speeds are tuned on a
+ * reference board; px/s on a smaller board means less crossing time, so the
+ * same speed plays much harder on a 13" laptop. Scaling by the diagonal
+ * ratio keeps crossing time (and the combo window's brick→paddle travel
+ * assumption) constant across screens. Clamped so phones don't crawl and
+ * huge monitors don't turn into a fastball.
+ */
+export function scaleSpeedToBoard(base, width, height, ref) {
+  const scale = Math.hypot(width, height) / Math.hypot(ref.width, ref.height);
+  return base * Math.min(1.1, Math.max(0.5, scale));
+}
+
 /** Create a fresh game state. rng: () => [0,1) — injectable for tests. */
 export function createGame({
   lines, width, height,

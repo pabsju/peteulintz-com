@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  createGame, layoutCells, step, launch, resetGame,
+  createGame, layoutCells, step, launch, resetGame, scaleSpeedToBoard,
   ballHitsRect, BALL_SPEED, MULTIPLIERS, PADDLE_MIN_SCALE,
 } from '../public/js/engine.js';
 
@@ -255,4 +255,24 @@ test('ballSpeed param: launch speed follows difficulty, defaults to BALL_SPEED',
   };
   assert.ok(Math.abs(mk(540) - 540) < 0.001, 'laptop speed');
   assert.ok(Math.abs(mk(null) - BALL_SPEED) < 0.001, 'default = BALL_SPEED');
+});
+
+test('scaleSpeedToBoard: reference board keeps tuned speed', () => {
+  const ref = { width: 1480, height: 930 };
+  assert.ok(Math.abs(scaleSpeedToBoard(720, 1480, 930, ref) - 720) < 0.001);
+});
+
+test('scaleSpeedToBoard: 13" laptop board slows the ball proportionally', () => {
+  const ref = { width: 1480, height: 930 };
+  // ~13" MacBook viewport minus the left pane: board ≈ 1020x790.
+  const v = scaleSpeedToBoard(540, 1020, 790, ref);
+  const expected = 540 * (Math.hypot(1020, 790) / Math.hypot(1480, 930));
+  assert.ok(Math.abs(v - expected) < 0.001);
+  assert.ok(v < 540 && v > 350, `scaled into a sane range, got ${v}`);
+});
+
+test('scaleSpeedToBoard: clamps at both extremes', () => {
+  const ref = { width: 1480, height: 930 };
+  assert.ok(Math.abs(scaleSpeedToBoard(540, 390, 550, ref) - 540 * 0.5) < 0.001, 'phone floor');
+  assert.ok(Math.abs(scaleSpeedToBoard(720, 3800, 2000, ref) - 720 * 1.1) < 0.001, 'big monitor ceiling');
 });

@@ -17,6 +17,11 @@ export const SITE_CONFIG = {
     // Difficulty modes (legend toggle). Laptop = trackpad-friendly slower
     // ball; desktop = full speed. Stats aggregate within a mode only.
     ballSpeeds: { laptop: 540, desktop: 720 },
+    // Board size the ballSpeeds were tuned on. Smaller viewports (13"
+    // laptops) get a proportionally slower ball so the time the ball takes
+    // to cross the board — i.e. your reaction time — is the same on every
+    // screen. See scaleSpeedToBoard in engine.js for the clamp.
+    speedRefBoard: { width: 1480, height: 930 },
     // Seconds allowed between brick hits before the combo multiplier
     // resets to 1X. Hits inside the window climb 1X→2X→3X→…→10X.
     // Needs to exceed the ball's brick→paddle travel time (~1s at

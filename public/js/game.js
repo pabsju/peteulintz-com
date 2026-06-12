@@ -3,7 +3,7 @@
 // updates the legend, and turns engine events into audio + hit markers.
 
 import { SITE_CONFIG } from './config.js';
-import { createGame, step, launch, resetGame, MULTIPLIERS } from './engine.js';
+import { createGame, step, launch, resetGame, scaleSpeedToBoard, MULTIPLIERS } from './engine.js';
 import { createRecorder, tick as statsTick, send as statsSend, latest as latestStats } from './stats.js';
 import { initStatsUI, updateStatsUI } from './statsui.js';
 import { initSnark, snarkTick } from './snark.js';
@@ -170,7 +170,11 @@ function resize() {
     width: rect.width,
     height: rect.height,
     ...SITE_CONFIG.game,
-    ballSpeed: SITE_CONFIG.game.ballSpeeds[gameMode],
+    ballSpeed: scaleSpeedToBoard(
+      SITE_CONFIG.game.ballSpeeds[gameMode],
+      rect.width, rect.height,
+      SITE_CONFIG.game.speedRefBoard,
+    ),
   });
   effects = [];
   textLayer = document.createElement('canvas');
