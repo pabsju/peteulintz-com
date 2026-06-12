@@ -34,3 +34,12 @@ Mark each step `[x]` done, `[ ]` pending.
 - Initialized project. Built single-file `index.html` (serif, minimal, dark-mode aware).
 - Sections: intro/about, currently reading (cover-image grid, dated), finished reading (dated list), GitHub + email links.
 - Chosen stack: single HTML+CSS file → Cloudflare Pages, domain via Porkbun.
+
+## 2026-06-12 — Stats + AI commentary live
+
+Game now records anonymous per-ball/per-game stats to D1 via the Worker,
+shows percentile cards (between balls + game-over summary), and runs live
+Claude Sonnet color commentary ("The Professor", character file at
+public/js/character.js). Difficulty modes: laptop (540 px/s) / desktop
+(720), stats aggregated per mode. Distributions seeded with 50 headless
+games. Full story: docs/build-notes.md.

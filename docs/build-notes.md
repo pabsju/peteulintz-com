@@ -354,7 +354,7 @@ gained the mode too — the Professor knows you're on the slow ball.
 Seeding note: `seed_games.mjs` takes a mode argument now; prod needs both
 runs (`… 30 desktop` and `… 20 laptop`).
 
-### Deploy checklist (the only part needing human auth)
+### Deploy checklist — COMPLETED 2026-06-12 (via API token; OAuth callback unusable on a headless remote box)
 
 1. `npx wrangler login` (interactive — user runs it)
 2. `npx wrangler d1 create breakout-stats` → paste real `database_id` into
