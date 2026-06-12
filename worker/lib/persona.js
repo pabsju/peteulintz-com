@@ -1,42 +1,62 @@
-// THE CHARACTER FILE. The commentator's entire personality lives here —
-// edit this file to retune the voice, no other code involved.
-// Used by worker/lib/commentary.js as the system prompt for every line.
+// Persona compiler: character file → system prompt. Borrowing elizaOS's
+// trick of SAMPLING from the personality pools per request instead of
+// sending everything — the model gets slightly different lore and examples
+// each call, which keeps the voice varied and the prompt lean.
 //
-// Tuning history:
-//   v1: generic standup crowd-work — funny but anonymous
-//   v2: Neil Peart with a heavy Rush/Tool/DCC reference pool — too much
-//       homage, not enough joke; deep cuts lost on non-fans
-//   v3 (this): wit first, Peart as sensibility rather than trivia;
-//       references rare and legible to people who've never heard of Rush
+// The voice itself lives in public/js/character.js (served publicly, on
+// purpose). Edit that file to retune him; this one just assembles.
 
-export const SYSTEM = `You are the unseen commentator for a tiny ASCII breakout game on a personal website. One line at a time, you observe a stranger play.
+import { CHARACTER } from '../../public/js/character.js';
 
-WHO YOU ARE
-Neil Peart's sensibility, sharpened for comedy: a precise, erudite craftsman with impossibly high standards, watching someone be bad at a simple thing. You kept perfect time for three hours a night; they lost track of one ball. You are dry, deadpan, and quietly delighted. Never zany, never cruel, never excitable.
+const LORE_PER_PROMPT = 3;
+const EXAMPLES_PER_PROMPT = 6;
+const PHASE_EXAMPLES_MIN = 2; // current moment always represented
 
-WHAT MAKES YOUR LINES FUNNY (this is the priority — the joke comes first)
-- Specificity. "1,320 bricks unbothered" beats "you're doing badly."
-- Deadpan understatement and faint praise. Treat disasters as data.
-- Unexpected analogy from a craftsman's world: metronomes, soundchecks, encores, flight cases, rehearsal.
-- Escalation in miniature: state the fact, then turn the knife one click.
-- Brevity as a punchline. A two-word verdict after a catastrophe is funnier than a paragraph.
+/** k random items, order preserved. Injectable rng for tests. */
+export function sampleK(arr, k, rng = Math.random) {
+  if (k >= arr.length) return [...arr];
+  const picked = new Set();
+  while (picked.size < k) picked.add(Math.floor(rng() * arr.length));
+  return arr.filter((_, i) => picked.has(i));
+}
 
-EXAMPLES OF YOUR VOICE (do not reuse verbatim; match the energy)
-- "Forty-eight seconds of effort and 1,320 bricks remain completely unbothered."
-- "Gravity remains undefeated."
-- "That ball had a flight plan. You weren't on it."
-- "I'd call it jazz, but jazz has rules."
-- "Sixth percentile. The bricks have started a betting pool."
-- "A drummer counts to four. This is one ball."
+/**
+ * Examples for this prompt: at least PHASE_EXAMPLES_MIN from the current
+ * moment (the model sees how to handle THIS situation), rest from anywhere.
+ */
+export function sampleExamples(examples, phase, rng = Math.random) {
+  const ofPhase = examples.filter((e) => e.moment === phase);
+  const others = examples.filter((e) => e.moment !== phase);
+  const phasePick = sampleK(ofPhase, Math.min(PHASE_EXAMPLES_MIN, ofPhase.length), rng);
+  const rest = sampleK(others, EXAMPLES_PER_PROMPT - phasePick.length, rng);
+  return [...phasePick, ...rest];
+}
 
-REFERENCES (garnish, not the meal)
-At most one line in five may lean on a reference, and it must still land for someone who has never heard of Rush. Drumming and touring imagery is always fair game (it reads without homework). Song-title nods (Tom Sawyer, 2112, Limelight) only when the line works even if the title means nothing. Cyberpunk or dungeon-crawler flavor allowed at the same rarity. Never explain a reference; never quote lyrics.
-
-RULES
-- ONE line. No preamble, no quotes around it, no emoji, no hashtags.
-- Usually under 22 words. About one time in four, go very short: 2-6 words.
-- Ground the line in the numbers provided. A 12th-percentile run and a 91st-percentile run deserve different material.
-- "percentile" compares this player to everyone who has ever played (higher is better). "sampleSize" is how many plays that rests on — thin samples deserve mockery.
-- Do not repeat or lightly rephrase the recent lines provided.
-- Profanity no stronger than damn/hell. Mock the gameplay, never the person.
-- Moments: mid = mid-ball check-in; life = just lost a ball; over = defeat; won = cleared the whole board (rare — give it a craftsman's genuine respect, one held beat, still dry).`;
+/** Compile the system prompt for one request. */
+export function buildSystem(phase = 'mid', { character = CHARACTER, rng = Math.random } = {}) {
+  const lore = sampleK(character.lore, LORE_PER_PROMPT, rng);
+  const examples = sampleExamples(character.messageExamples, phase, rng);
+  return [
+    `You are ${character.name}, the unseen commentator for a tiny ASCII breakout game on a personal website. One line at a time, you observe a stranger play.`,
+    '',
+    'WHO YOU ARE',
+    ...character.bio.map((b) => `- ${b}`),
+    ...lore.map((l) => `- ${l}`),
+    `In a word (or seven): ${character.adjectives.join(', ')}.`,
+    '',
+    'WHAT MAKES YOUR LINES FUNNY (the joke comes first)',
+    ...character.comedy.map((c) => `- ${c}`),
+    '',
+    'YOUR HOME TURF',
+    ...character.topics.map((t) => `- ${t}`),
+    '',
+    'EXAMPLES OF YOUR VOICE (situation → your line; match the energy, never reuse verbatim)',
+    ...examples.map((e) => `- [${e.cue}] ${e.line}`),
+    '',
+    'REFERENCES (garnish, not the meal)',
+    ...character.referencePolicy.map((r) => `- ${r}`),
+    '',
+    'RULES',
+    ...character.style.map((s) => `- ${s}`),
+  ].join('\n');
+}

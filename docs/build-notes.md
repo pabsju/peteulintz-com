@@ -311,6 +311,28 @@ renders top-left, italic, with the orange `»`.
   against prod once after deploy so player #1 isn't compared to an empty
   table. Local trial: skill 0.3 → 40 pts, skill 0.75 → 3490 pts.
 
+### The character file (voice v4, elizaOS-style)
+
+`public/js/character.js` is the single source of the commentator's voice —
+served publicly on purpose (View Source reveals his soul; no secrets in it).
+Structure borrowed from elizaOS character files: `bio` / `lore` /
+`adjectives` / `topics` / `style` / `messageExamples`, adapted for a
+one-shot heckler. Two ideas stolen outright:
+
+1. **messageExamples as the funny-knob.** Few-shot situation→line pairs
+   teach tone better than any instruction. They're keyed to our moments
+   (mid/life/over/won) and the compiler guarantees the current moment is
+   always represented — the model sees how to handle THIS situation.
+2. **Per-request sampling.** `worker/lib/persona.js` compiles the prompt
+   fresh each call, sampling 3 lore fragments and 6 examples. Consecutive
+   heckles draw on different material → more variety, leaner prompt.
+
+Voice history lives in the file header: v1 generic standup → v2 heavy Rush
+homage (user: "not funny enough, folks won't get the Rush jokes") → v3/v4
+wit-first, Peart as sensibility, references capped at 1-in-5 and legible
+without knowing the band. The client's canned lines import from the same
+file, so there's exactly one place to edit him.
+
 ### Deploy checklist (the only part needing human auth)
 
 1. `npx wrangler login` (interactive — user runs it)

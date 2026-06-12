@@ -7,7 +7,7 @@
 // itself), which is length-capped, charset-scrubbed, and only ever contains
 // text that originated from this endpoint or the canned list anyway.
 
-import { SYSTEM } from './persona.js';
+import { buildSystem } from './persona.js';
 
 const MODEL = 'claude-sonnet-4-6';
 const ANTHROPIC_URL = 'https://api.anthropic.com/v1/messages';
@@ -104,7 +104,9 @@ export async function handleCommentary(request, env, fetcher = fetch) {
       model: MODEL,
       max_tokens: 80,
       temperature: 1,
-      system: SYSTEM,
+      // Compiled fresh per request: the persona compiler samples lore and
+      // few-shot examples, so consecutive heckles draw on different material.
+      system: buildSystem(v.value.phase),
       messages: [{ role: 'user', content: buildUserMessage(v.value) }],
     }),
   });

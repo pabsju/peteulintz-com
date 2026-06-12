@@ -8,32 +8,11 @@
 
 // --- canned fallback --------------------------------------------------------
 
-// Voice: see worker/lib/persona.js (the character file). Wit first; craft
-// imagery legible to anyone; at most a couple of gentle Rush nods.
-export const CANNED = [
-  "That ball had a flight plan. You weren't on it.",
-  "Gravity remains undefeated.",
-  "I'd call it jazz, but jazz has rules.",
-  "Bold strategy, defending the one spot the ball isn't.",
-  "The bricks have started a betting pool.",
-  "Somewhere a metronome just filed a complaint.",
-  "I've seen soundchecks with more conviction.",
-  "Precision is a habit. So is whatever that was.",
-  "The paddle works better when it's involved.",
-  "A drummer counts to four. This is one ball.",
-  "New plan: try aiming.",
-  "Achievement unlocked: Spectator.",
-  "Your highlight reel is a still image.",
-  "That was the easy one.",
-  "You're pacing yourself. Historians will wonder for what.",
-  "Every miss is a tiny encore of the previous one.",
-  "Take your time. The bricks aren't going anywhere. Clearly.",
-  "We're closer to intermission than to an encore.",
-  "I kept time for three hours a night. You lost one ball in nine seconds.",
-  "Tom Sawyer would have caught that, and he's fictional.",
-  "The ball isn't being subtle. It's right there.",
-  "Applause from the cheap seats. Both of them.",
-];
+// Voice lives in ./character.js (the character file — single source for the
+// Worker's system prompt AND these offline fallbacks).
+import { CHARACTER } from './character.js';
+
+export const CANNED = CHARACTER.fallbackLines;
 
 /**
  * Shuffle bag: hands out items in random order, no repeats until the bag
