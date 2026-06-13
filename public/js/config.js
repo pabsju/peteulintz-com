@@ -9,7 +9,7 @@ export const SITE_CONFIG = {
   marqueeLines: ['RUSH', 'TORONTO', 'AUGUST 11', '2026'],
 
   // Small caption shown above the game.
-  marqueeCaption: "Next Concert I'll be attending. Break it gently.",
+  marqueeCaption: "Have a quick break: play a game! (If you recognise the symbol: great taste!)",
 
   // Game tuning.
   game: {
