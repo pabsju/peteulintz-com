@@ -100,3 +100,29 @@ export function rasterizeLines(lines, lineGap = 3, scale = 1) {
   });
   return { cells, cols, rows: row - (lines.length ? lineGap * scale : 0) };
 }
+
+/**
+ * Rasterize a raw ASCII image: each line is a row of pixels, every non-space
+ * character becomes a cell rendered as that character. Unlike rasterizeLines
+ * there's no FONT lookup, no uppercasing, and no centering — the grid IS the
+ * art, so any character (including block glyphs ░▒▓█) is allowed.
+ * scale: each source char becomes a scale x scale block of cells.
+ * Returns { cells, cols, rows } — same shape as rasterizeLines.
+ */
+export function rasterizeImage(lines, scale = 1) {
+  const cells = [];
+  const cols = Math.max(...lines.map((l) => l.length), 0) * scale;
+  const rows = lines.length * scale;
+  lines.forEach((line, r0) => {
+    for (let c = 0; c < line.length; c++) {
+      const ch = line[c];
+      if (ch === ' ' || ch === '') continue;
+      for (let dr = 0; dr < scale; dr++) {
+        for (let dc = 0; dc < scale; dc++) {
+          cells.push({ row: r0 * scale + dr, col: c * scale + dc, char: ch, line: 0 });
+        }
+      }
+    }
+  });
+  return { cells, cols, rows };
+}

@@ -23,6 +23,31 @@ const COLORS = {
   accent: '#d97757',
   dim: '#6b665c',
 };
+// ASCII-image tone ramp: faint→dense glyphs. MUST stay in sync with the
+// generator that built images/weave_ascii.txt. In image mode each cell is
+// drawn as its own character (real letters/numbers/punctuation — sharp solid
+// strokes, no dither, no extrusion), and the colour is a greyscale ramp keyed
+// to the glyph's density, so character and colour reinforce the same shading.
+const IMG_RAMP = ' .:-=+ocsxznXSZ2358%#@';
+const RAMP_LO = 0x55; // faintest glyph grey
+const RAMP_HI = 0xec; // densest glyph grey (≈ COLORS.text)
+const rampColorCache = {};
+function rampColor(ch) {
+  let c = rampColorCache[ch];
+  if (c) return c;
+  const i = IMG_RAMP.indexOf(ch);
+  if (i <= 0) {
+    c = COLORS.text;
+  } else {
+    const t = (i - 1) / (IMG_RAMP.length - 2); // 0..1 across the ramp
+    const v = Math.round(RAMP_LO + (RAMP_HI - RAMP_LO) * t);
+    // a hair warm so it sits with the cream UI; still reads as greyscale
+    c = `rgb(${v}, ${Math.round(v * 0.97)}, ${Math.round(v * 0.9)})`;
+  }
+  rampColorCache[ch] = c;
+  return c;
+}
+
 const DEPTH_STEP = 0.16; // extrusion offset as a fraction of cell size
 const EFFECT_LIFE = 0.7; // seconds a hit marker lives
 
@@ -31,6 +56,21 @@ const ctx = canvas.getContext('2d');
 
 let state = null;
 let textLayer = null; // offscreen canvas holding the extruded text
+
+// The board is an ASCII picture (the Rush symbol), fetched once at init. On
+// any failure we fall back to the text marquee (SITE_CONFIG.marqueeLines) so
+// the game never breaks.
+let boardLines = SITE_CONFIG.marqueeLines;
+let boardIsImage = false;
+
+async function loadBoardImage() {
+  try {
+    const res = await fetch('images/weave_ascii.txt');
+    if (!res.ok) return;
+    const lines = (await res.text()).replace(/\n+$/, '').split('\n');
+    if (lines.length) { boardLines = lines; boardIsImage = true; }
+  } catch { /* keep the text marquee */ }
+}
 let dpr = 1;
 let mouseX = null;
 let lastTime = null;
@@ -166,10 +206,11 @@ function resize() {
   canvas.style.width = `${rect.width}px`;
   canvas.style.height = `${rect.height}px`;
   state = createGame({
-    lines: SITE_CONFIG.marqueeLines,
+    lines: boardLines,
     width: rect.width,
     height: rect.height,
     ...SITE_CONFIG.game,
+    image: boardIsImage,
     ballSpeed: scaleSpeedToBoard(
       SITE_CONFIG.game.ballSpeeds[gameMode],
       rect.width, rect.height,
@@ -203,6 +244,26 @@ function renderTextLayer(region = null) {
   g.rect(r.x, r.y, r.w, r.h);
   g.clip();
   g.clearRect(r.x, r.y, r.w, r.h);
+
+  // Image mode: draw each cell as its own ASCII glyph, flat (no extrusion), in
+  // a density-keyed grey. Real glyphs are crisp solid strokes — sharp, unlike
+  // the ░▒▓ dither blocks that looked blurry.
+  if (state.image) {
+    g.font = cellFont(s * 1.15);
+    g.textAlign = 'center';
+    g.textBaseline = 'middle';
+    for (const cell of state.cells) {
+      if (!cell.alive || !cell.char) continue;
+      if (cell.x + s < r.x || cell.x > r.x + r.w) continue;
+      if (cell.y + s < r.y || cell.y > r.y + r.h) continue;
+      g.fillStyle = rampColor(cell.char);
+      g.fillText(cell.char, cell.x + s / 2, cell.y + s / 2);
+    }
+    g.restore();
+    state.textDirty = false;
+    return;
+  }
+
   g.font = cellFont(s * 1.15);
   g.textAlign = 'center';
   g.textBaseline = 'middle';
@@ -362,7 +423,8 @@ window.addEventListener('resize', () => {
 // Wait for the mono font so glyph metrics are right on first paint.
 initStatsUI();
 initSnark();
-document.fonts.ready.then(() => {
+document.fonts.ready.then(async () => {
+  await loadBoardImage();
   resize();
   requestAnimationFrame(frame);
 });

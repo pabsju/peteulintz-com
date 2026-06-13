@@ -4,7 +4,7 @@
 // to (sounds, hit markers): 'paddle', 'brick' (tier + hit coords), 'life',
 // 'over', 'won'.
 
-import { rasterizeLines } from './glyphs.js';
+import { rasterizeLines, rasterizeImage } from './glyphs.js';
 
 export const BALL_SPEED = 720; // default; createGame({ballSpeed}) overrides per difficulty
 export const PADDLE_LERP = 14; // paddle chase rate (1/s)
@@ -25,8 +25,12 @@ export const TEXT_SCALE = 2;
  * Returns { cells, cellSize, originX, originY } where each cell gains
  * x/y pixel coords and an alive flag.
  */
-export function layoutCells(lines, width, height) {
-  const grid = rasterizeLines(lines, 3, TEXT_SCALE);
+export function layoutCells(lines, width, height, opts = {}) {
+  // opts.image: treat lines as a raw ASCII picture (no FONT, scale 1) instead
+  // of bitmap text. Same { cells, cols, rows } shape either way.
+  const grid = opts.image
+    ? rasterizeImage(lines, opts.scale ?? 1)
+    : rasterizeLines(lines, 3, TEXT_SCALE);
   const padX = width * 0.04;
   const padTop = height * 0.08;
   const maxH = height * 0.6; // leave the lower part for play
@@ -66,11 +70,13 @@ export function createGame({
   comboWindow = 0.2,
   brickPoints = 10,
   ballSpeed = BALL_SPEED,
+  image = false,
 }) {
-  const { cells, cellSize } = layoutCells(lines, width, height);
+  const { cells, cellSize } = layoutCells(lines, width, height, { image });
   const paddleW = Math.max(70, width * 0.12);
   const state = {
     lines, width, height, rng,
+    image, // ASCII-picture board: renderer draws flat glyphs, not extruded text
     cells, cellSize,
     total: cells.length,
     destroyed: 0,
@@ -83,7 +89,7 @@ export function createGame({
     comboWindow,
     brickPoints,
     ballSpeed,
-    ball: { x: width / 2, y: 0, vx: 0, vy: 0, r: Math.max(5, cellSize * 0.9) },
+    ball: { x: width / 2, y: 0, vx: 0, vy: 0, r: Math.max(5, cellSize * 0.6) },
     paddle: { x: width / 2, y: height - 36, w: paddleW, baseW: paddleW, h: 8 },
     textDirty: true, // renderer redraws the text layer when set
   };
