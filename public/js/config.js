@@ -32,8 +32,8 @@ export const SITE_CONFIG = {
 
   // "Current interesting AI item" slot in the left pane.
   aiItem: {
-    label: 'Hermes Harness Architecture',
-    url: 'https://x.com/aparnadhinak/status/2060406977357070522',
-    note: 'Instructive breakdown... lots to grok.',
+    label: 'Loop engineering post',
+    url: 'https://asixiv.org/pdf/curated/2606.00001',
+    note: `Curious how Peter Steinberger's 'One shouldn't be prompting coding agents anymore but writing loops' comment might apply to research agents`,
   },
 };
