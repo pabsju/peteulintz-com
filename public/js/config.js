@@ -32,8 +32,10 @@ export const SITE_CONFIG = {
 
   // "Current interesting AI item" slot in the left pane.
   aiItem: {
-    label: 'Loop engineering post',
-    url: 'https://asixiv.org/pdf/curated/2606.00001',
-    note: `Curious how Peter Steinberger's 'One shouldn't be prompting coding agents anymore but writing loops' comment might apply to research agents`,
+    label: 'Wisdom tradition methods for AI Alignment',
+    url: 'https://www.researchgate.net/publication/394347277_Contemplative_Superalignment',
+    note: `Fascinated by this work discussing how Friston's Active Inference framework might be extended to provide avenues into 
+    utilizing wisdom approaches (e.g. Buddhist or Advaita methods) for much more effective AI alignment strategies. What an amazing
+    research domain!`,
   },
 };
