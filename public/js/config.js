@@ -35,7 +35,7 @@ export const SITE_CONFIG = {
     label: 'Laukkonen, R. et al. Contemplative Superalignment',
     url: 'https://www.researchgate.net/publication/394347277_Contemplative_Superalignment',
     note: `Fascinated by this work discussing how Friston's Active Inference framework might be extended to provide avenues into 
-    utilizing wisdom approaches (e.g. Buddhist or Advaita methods) for much more effective AI alignment strategies. What an amazing
+    utilizing wisdom approaches (e.g. Buddhist meditative/compassion methods) for much more effective AI alignment strategies. What an amazing
     research domain!`,
   },
 };
