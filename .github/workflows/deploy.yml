@@ -1,0 +1,39 @@
+name: Deploy
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          # node 22 LTS: node:sqlite still lives behind --experimental-sqlite
+          # here, same as the dev box, so the local test command works as-is.
+          node-version: 22
+      - name: Run tests
+        run: node --experimental-sqlite --test test/*.mjs
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Deploy to Cloudflare Workers
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          # Pinned to the version last deployed by hand, so CI and local match.
+          wranglerVersion: '4.129.0'
